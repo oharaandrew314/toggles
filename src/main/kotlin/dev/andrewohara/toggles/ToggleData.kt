@@ -15,12 +15,12 @@ fun ToggleData.toToggle(projectName: ProjectName, toggleName: ToggleName, time: 
     updatedOn = time,
     variations = variations,
     overrides = overrides,
-    default = defaultVariation
+    defaultVariation = defaultVariation
 )
 
 fun Toggle.with(data: ToggleData, time: Instant) = copy(
     updatedOn = time,
     variations = data.variations,
     overrides = data.overrides,
-    default = data.defaultVariation
+    defaultVariation = data.defaultVariation
 )

@@ -14,8 +14,8 @@ import java.time.Clock
 class Toggles(
     val projects: ProjectRepo,
     val toggles: TogglesRepo,
-    val pageSize: Int,
-    val clock: Clock
+    val pageSize: Int = 100,
+    val clock: Clock = Clock.systemUTC()
 )
 
 // Projects
@@ -56,4 +56,4 @@ fun Toggles.updateToggle(projectName: ProjectName, toggleName: ToggleName, data:
 
 fun Toggles.deleteToggle(projectName: ProjectName, toggleName: ToggleName) = projects
     .getOrFail(projectName)
-    .peek { toggles.delete(projectName, toggleName).asResultOr { ToggleNotFound(projectName, toggleName) } }
+    .flatMap { toggles.delete(projectName, toggleName).asResultOr { ToggleNotFound(projectName, toggleName) } }

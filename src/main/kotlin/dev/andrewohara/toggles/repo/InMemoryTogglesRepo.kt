@@ -12,7 +12,11 @@ fun TogglesRepo.Companion.inMemory() = object: TogglesRepo {
     private val toggles = ConcurrentSkipListSet<Toggle>()
 
     override fun list(projectName: ProjectName, pageSize: Int) = Paginator<Toggle, ToggleName> { cursor ->
-        val results = toggles.sorted().dropWhile { cursor != null && it.toggleName <= cursor }
+        val results = toggles
+            .filter { it.projectName == projectName }
+            .sorted()
+            .dropWhile { cursor != null && it.toggleName <= cursor }
+
         val page = results.take(pageSize)
         Page(page, page.lastOrNull()?.toggleName?.takeIf { page.size < results.size })
     }

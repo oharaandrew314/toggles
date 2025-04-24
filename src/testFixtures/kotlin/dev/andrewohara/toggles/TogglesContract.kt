@@ -3,72 +3,159 @@ package dev.andrewohara.toggles
 import dev.andrewohara.utils.pagination.Page
 import dev.forkhandles.result4k.kotest.shouldBeFailure
 import dev.forkhandles.result4k.kotest.shouldBeSuccess
-import io.kotest.matchers.shouldBe
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import java.time.Clock
-import java.time.Instant
-import java.time.ZoneId
-import java.time.ZoneOffset
+import java.time.Duration
 
-private const val PAGE_SIZE = 2
-
-abstract class TogglesContract {
-
-    protected var time: Instant = Instant.parse("2025-04-24T12:00:00Z")
-    private val clock = object: Clock() {
-        override fun getZone() = ZoneOffset.UTC
-        override fun withZone(zone: ZoneId?) = error("not implemented")
-        override fun instant() = time
-    }
-
-    private lateinit var toggles: Toggles
-    abstract fun createToggles(clock: Clock, pageSize: Int): Toggles
-
-    @BeforeEach
-    fun setup() {
-        toggles = createToggles(clock, PAGE_SIZE)
-    }
-
+abstract class TogglesContract: ContractBase() {
+    
     @Test
-    fun `create project - success`() {
+    fun `create toggle - project not found`() {
+        toggles.createToggle(projectName1, toggleName1, toggleData1) shouldBeFailure ProjectNotFound(projectName1)
+    }
+    
+    @Test
+    fun `create toggle - already exists`() {
         toggles.createProject(projectName1).shouldBeSuccess()
-        toggles.createProject(projectName1) shouldBeFailure ProjectAlreadyExists(projectName1)
+        toggles.createToggle(projectName1, toggleName1, toggleData1).shouldBeSuccess()
+        toggles.createToggle(projectName1, toggleName1, toggleData1) shouldBeFailure ToggleAlreadyExists(
+            projectName1,
+            toggleName1
+        )
     }
-
+    
     @Test
-    fun `list projects`() {
-        val project1 = toggles.createProject(projectName1).shouldBeSuccess()
-        val project2 = toggles.createProject(projectName2).shouldBeSuccess()
-        val project3 = toggles.createProject(projectName3).shouldBeSuccess()
+    fun `create toggle - success`() {
+        toggles.createProject(projectName1).shouldBeSuccess()
 
-        toggles.listProjects(null) shouldBe Page(
-            items = listOf(project1, project2),
-            next = project2.projectName
+        val expected = Toggle(
+            projectName = projectName1,
+            toggleName = toggleName1,
+            variations = toggleData1.variations,
+            defaultVariation = toggleData1.defaultVariation,
+            overrides = toggleData1.overrides,
+            createdOn = time,
+            updatedOn = time
         )
 
-        toggles.listProjects(project2.projectName) shouldBe Page(
-            items = listOf(project3),
+        toggles.createToggle(projectName1, toggleName1, toggleData1) shouldBeSuccess expected
+        toggles.listToggles(projectName1, null) shouldBeSuccess Page(
+            items = listOf(expected),
             next = null
         )
     }
 
     @Test
-    fun `delete project - not found`() {
-        toggles.deleteProject(projectName1) shouldBeFailure ProjectNotFound(projectName1)
+    fun `create toggle - duplicate in other project`() {
+        toggles.createProject(projectName1).shouldBeSuccess()
+        toggles.createProject(projectName2).shouldBeSuccess()
+
+        val toggle1 = toggles.createToggle(projectName1, toggleName1, toggleData1).shouldBeSuccess()
+        val toggle2 = toggles.createToggle(projectName2, toggleName1, toggleData2).shouldBeSuccess()
+
+        toggles.listToggles(projectName1, null) shouldBeSuccess Page(listOf(toggle1), null)
+        toggles.listToggles(projectName2, null) shouldBeSuccess Page(listOf(toggle2), null)
+    }
+    
+    @Test
+    fun `list toggles - success`() {
+        toggles.createProject(projectName1).shouldBeSuccess()
+        toggles.createProject(projectName2).shouldBeSuccess()
+
+        val toggle1 = toggles.createToggle(projectName1, toggleName1, toggleData1).shouldBeSuccess()
+        val toggle2 = toggles.createToggle(projectName1, toggleName2, toggleData1).shouldBeSuccess()
+        val toggle3 = toggles.createToggle(projectName1, toggleName3, toggleData1).shouldBeSuccess()
+        val toggle4 = toggles.createToggle(projectName2, toggleName1, toggleData1).shouldBeSuccess()
+
+        toggles.listToggles(projectName1, null) shouldBeSuccess Page(
+            items = listOf(toggle1, toggle2),
+            next = toggle2.toggleName
+        )
+
+        toggles.listToggles(projectName1, toggle2.toggleName) shouldBeSuccess Page(
+            items = listOf(toggle3),
+            next = null
+        )
+
+        toggles.listToggles(projectName2, null) shouldBeSuccess Page(
+            items = listOf(toggle4),
+            next = null
+        )
+    }
+    
+    @Test
+    fun `update toggle - toggle not found`() {
+        toggles.createProject(projectName1).shouldBeSuccess()
+        toggles.updateToggle(projectName1, toggleName1, toggleData1) shouldBeFailure ToggleNotFound(
+            projectName1,
+            toggleName1
+        )
+    }
+    
+    @Test
+    fun `update toggle - project not found`() {
+        toggles.updateToggle(projectName1, toggleName1, toggleData1) shouldBeFailure ProjectNotFound(projectName1)
+    }
+    
+    @Test
+    fun `update toggle - success`() {
+        toggles.createProject(projectName1).shouldBeSuccess()
+        val original = toggles.createToggle(projectName1, toggleName1, toggleData1).shouldBeSuccess()
+
+        time += Duration.ofSeconds(5)
+
+        val expected = original.copy(
+            variations = toggleData2.variations,
+            defaultVariation = toggleData2.defaultVariation,
+            overrides = toggleData2.overrides,
+            updatedOn = time
+        )
+
+        toggles.updateToggle(projectName1,  toggleName1, toggleData2) shouldBeSuccess expected
+        toggles.listToggles(projectName1, null) shouldBeSuccess Page(
+            items = listOf(expected),
+            next = null
+        )
+    }
+    
+    @Test
+    fun `get toggle - project not found`() {
+        toggles.getToggle(projectName1, toggleName1) shouldBeFailure ProjectNotFound(projectName1)
     }
 
     @Test
-    fun `delete project - success`() {
-        val project1 = toggles.createProject(projectName1).shouldBeSuccess()
-        toggles.createToggle(projectName1, toggleName1, toggleCreateData).shouldBeSuccess()
-        toggles.deleteToggle(projectName1, toggleName1).shouldBeSuccess()
-
-        toggles.deleteProject(projectName1) shouldBeSuccess project1
+    fun `get toggle - toggle not found`() {
+        toggles.createProject(projectName1).shouldBeSuccess()
+        toggles.getToggle(projectName1, toggleName1) shouldBeFailure ToggleNotFound(projectName1, toggleName1)
     }
 
     @Test
-    fun `delete project - not empty`() {
+    fun `get toggle - success`() {
+        toggles.createProject(projectName1).shouldBeSuccess()
 
+        val toggle = toggles.createToggle(projectName1, toggleName1, toggleData1).shouldBeSuccess()
+        toggles.getToggle(projectName1, toggleName1) shouldBeSuccess toggle
+    }
+
+    @Test
+    fun `delete toggle - project not found`() {
+        toggles.deleteToggle(projectName1, toggleName1) shouldBeFailure ProjectNotFound(projectName1)
+    }
+
+    @Test
+    fun `delete toggle - toggle not found`() {
+        toggles.createProject(projectName1).shouldBeSuccess()
+        toggles.deleteToggle(projectName1, toggleName1) shouldBeFailure ToggleNotFound(projectName1, toggleName1)
+    }
+
+    @Test
+    fun `delete toggle - success`() {
+        toggles.createProject(projectName1).shouldBeSuccess()
+        val toggle = toggles.createToggle(projectName1, toggleName1, toggleData1).shouldBeSuccess()
+
+        toggles.deleteToggle(projectName1, toggleName1) shouldBeSuccess toggle
+        toggles.listToggles(projectName1, null) shouldBeSuccess Page(
+            items = emptyList(),
+            next = null
+        )
     }
 }
