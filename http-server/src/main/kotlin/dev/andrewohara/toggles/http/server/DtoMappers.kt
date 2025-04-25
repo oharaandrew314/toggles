@@ -9,9 +9,9 @@ import dev.andrewohara.toggles.ProjectNotFound
 import dev.andrewohara.toggles.Toggle
 import dev.andrewohara.toggles.ToggleAlreadyExists
 import dev.andrewohara.toggles.ToggleCreateData
-import dev.andrewohara.toggles.ToggleUpdateData
 import dev.andrewohara.toggles.ToggleName
 import dev.andrewohara.toggles.ToggleNotFound
+import dev.andrewohara.toggles.ToggleState
 import dev.andrewohara.toggles.TogglesError
 import dev.andrewohara.toggles.http.ProjectDataDto
 import dev.andrewohara.toggles.http.ProjectDto
@@ -70,7 +70,7 @@ fun Page<Toggle, ToggleName>.toDto() = TogglesPageDto(
     next = next
 )
 
-fun ToggleUpdateDataDto.toModel() = ToggleUpdateData(
+fun ToggleUpdateDataDto.toModel() = ToggleState(
     variations = variations,
     defaultVariation = defaultVariation,
     overrides = overrides

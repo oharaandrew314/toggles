@@ -48,7 +48,7 @@ fun Toggles.createToggle(projectName: ProjectName, data: ToggleCreateData) = pro
     .map { data.toToggle(projectName, clock.instant()) }
     .peek(toggles::plusAssign)
 
-fun Toggles.updateToggle(projectName: ProjectName, toggleName: ToggleName, data: ToggleUpdateData) = projects
+fun Toggles.updateToggle(projectName: ProjectName, toggleName: ToggleName, data: ToggleState) = projects
     .getOrFail(projectName)
     .flatMap { toggles.getOrFail(projectName, toggleName) }
     .map { it.with(data, clock.instant()) }

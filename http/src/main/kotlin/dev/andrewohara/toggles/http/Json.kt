@@ -8,6 +8,7 @@ import dev.andrewohara.toggles.Weight
 import org.http4k.format.Moshi
 import org.http4k.format.value
 
+// TODO kotshi
 val togglesJson = Moshi.custom {
     value(ProjectName)
     value(ToggleName)

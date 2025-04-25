@@ -10,7 +10,7 @@ fun ToggleCreateData.toDto() = ToggleCreateDataDto(
     overrides = overrides
 )
 
-fun ToggleUpdateData.toDto() = ToggleUpdateDataDto(
+fun ToggleState.toDto() = ToggleUpdateDataDto(
     variations = variations,
     defaultVariation = defaultVariation,
     overrides = overrides

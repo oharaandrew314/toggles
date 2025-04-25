@@ -1,7 +1,6 @@
 dependencies {
     api(project(":http"))
     api("dev.andrewohara:service-utils:_")
-    api("dev.forkhandles:result4k")
     api("io.github.microutils:kotlin-logging:_")
     runtimeOnly("org.slf4j:slf4j-simple:_")
 
