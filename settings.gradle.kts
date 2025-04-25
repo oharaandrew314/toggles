@@ -3,3 +3,7 @@ plugins {
     id("de.fayard.refreshVersions") version "0.60.3"
 }
 rootProject.name = "toggles"
+include("core")
+include("http")
+include("http-server")
+include("http-client")
