@@ -1,9 +1,15 @@
-package dev.andrewohara.toggles
+package dev.andrewohara.toggles.source
 
-import java.time.Duration
-import dev.forkhandles.result4k.Result4k
 import com.github.benmanes.caffeine.cache.Caffeine
+import dev.andrewohara.toggles.ProjectName
+import dev.andrewohara.toggles.ToggleName
+import dev.andrewohara.toggles.ToggleState
+import dev.forkhandles.result4k.Result4k
+import java.time.Duration
 
+/**
+ * Requires caffeine to be on the classpath
+ */
 fun ToggleSource.caffeineCached(
     duration: Duration = Duration.ofMinutes(1)
 ): ToggleSource {
@@ -15,4 +21,3 @@ fun ToggleSource.caffeineCached(
 
     return ToggleSource { projectName, toggleName -> cache.get(projectName to toggleName) }
 }
-

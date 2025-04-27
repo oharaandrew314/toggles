@@ -3,19 +3,18 @@ package dev.andrewohara.toggles.engine
 import dev.andrewohara.toggles.ProjectName
 import dev.andrewohara.toggles.SubjectId
 import dev.andrewohara.toggles.ToggleName
-import dev.andrewohara.toggles.ToggleSource
+import dev.andrewohara.toggles.source.ToggleSource
 import dev.andrewohara.toggles.ToggleState
 import dev.andrewohara.toggles.VariationName
-import dev.forkhandles.result4k.map
+import dev.forkhandles.result4k.onFailure
 import dev.forkhandles.result4k.peekFailure
-import dev.forkhandles.result4k.recover
 import mu.KotlinLogging
 import java.nio.ByteBuffer
 import java.security.MessageDigest
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
-class Feature(
+class Toggle(
     val projectName: ProjectName,
     val toggleName: ToggleName,
     private val toggleSource: ToggleSource,
@@ -24,28 +23,31 @@ class Feature(
     private val logger = KotlinLogging.logger { }
 
     operator fun invoke(subjectId: SubjectId): VariationName {
-        return toggleSource(projectName, toggleName)
-            .peekFailure { logger.error(it) }
-            .map { it.evaluate(subjectId) }
-            .recover { defaultVariation }
+        val key = "$projectName/$toggleName:$subjectId"
+
+        val state = toggleSource(projectName, toggleName)
+            .peekFailure { logger.error("$key -> engine_default($defaultVariation): $it") }
+            .onFailure { return defaultVariation }
+
+        if (subjectId in state.overrides) return state.overrides.getValue(subjectId)
+
+        // distribute salted hash into 1 of 100 buckets
+        val bucket = MessageDigest.getInstance("MD5")
+            .digest(key.encodeToByteArray())
+            .let { abs(ByteBuffer.wrap(it).int) % 100 }
+
+        var remainder = bucket
+        for ((variation, weight) in state.generateBuckets()) {
+            remainder -= weight
+            if (remainder < 0) {
+                logger.debug { "$key -> bucket:$bucket($variation)" }
+                return variation
+            }
+        }
+
+        logger.debug { "$key -> bucket $bucket:toggle_default($defaultVariation)" }
+        return state.defaultVariation
     }
-}
-
-fun ToggleState.evaluate(subjectId: SubjectId): VariationName {
-    if (subjectId in overrides) return overrides.getValue(subjectId)
-
-    // distribute hash into 1 of 100 buckets
-    val bucket = MessageDigest.getInstance("MD5")
-        .digest(subjectId.value.toByteArray())
-        .let { abs(ByteBuffer.wrap(it).int) % 100 }
-
-    var remainder = bucket
-    for ((variation, weight) in generateBuckets()) {
-        remainder -= weight
-        if (remainder < 0) return variation
-    }
-
-    return defaultVariation
 }
 
 // TODO optimize; likely don't need to build the list of buckets

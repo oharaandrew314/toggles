@@ -24,7 +24,9 @@ class ToggleName private constructor(value: String): StringValue(value), Compara
 }
 
 class VariationName private constructor(value: String): StringValue(value), ComparableValue<VariationName, String> {
-    companion object: StringValueFactory<VariationName>(::VariationName)
+    companion object: StringValueFactory<VariationName>(::VariationName) {
+        val default = of("off")
+    }
 }
 
 class SubjectId private constructor(value: String): StringValue(value), ComparableValue<SubjectId, String> {

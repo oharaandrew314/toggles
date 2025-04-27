@@ -17,12 +17,21 @@ subprojects {
 
     dependencies {
         testImplementation(kotlin("test"))
+        testImplementation("io.kotest:kotest-assertions-core-jvm:_")
+        testImplementation("org.slf4j:slf4j-simple:_")
     }
 
     tasks.test {
         useJUnitPlatform()
     }
+
     kotlin {
         jvmToolchain(21)
+    }
+
+    tasks.compileKotlin {
+        compilerOptions {
+            allWarningsAsErrors = true
+        }
     }
 }

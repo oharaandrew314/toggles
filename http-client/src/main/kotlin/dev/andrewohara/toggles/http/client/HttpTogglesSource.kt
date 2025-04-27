@@ -1,6 +1,6 @@
 package dev.andrewohara.toggles.http.client
 
-import dev.andrewohara.toggles.ToggleSource
+import dev.andrewohara.toggles.source.ToggleSource
 import dev.andrewohara.toggles.ToggleState
 import dev.forkhandles.result4k.map
 import dev.forkhandles.result4k.mapFailure
