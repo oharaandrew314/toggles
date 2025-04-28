@@ -60,7 +60,7 @@ abstract class ProjectsHttpContract: ContractBase() {
     @Test
     fun `delete project - success`() {
         val project1 = toggles.createProject(ProjectData(projectName1)).shouldBeSuccess()
-        toggles.createToggle(projectName1, toggleData1.toCreate(toggleName1)).shouldBeSuccess()
+        toggles.createToggle(projectName1, mostlyOld.toCreate(toggleName1)).shouldBeSuccess()
         toggles.deleteToggle(projectName1, toggleName1).shouldBeSuccess()
 
         httpClient.deleteProject(projectName1) shouldBeSuccess project1.toDto()
@@ -73,10 +73,12 @@ abstract class ProjectsHttpContract: ContractBase() {
     @Test
     fun `delete project - not empty`() {
         toggles.createProject(ProjectData(projectName1)).shouldBeSuccess()
-        toggles.createToggle(projectName1, toggleData1.toCreate(toggleName1)).shouldBeSuccess()
+        toggles.createToggle(projectName1, mostlyOld.toCreate(toggleName1)).shouldBeSuccess()
 
         httpClient.deleteProject(projectName1) shouldBeFailure TogglesErrorDto(
             message = "Project not empty: $projectName1"
         )
     }
 }
+
+class InMemoryProjectsHttpTest: ProjectsHttpContract(), InMemoryTogglesSource
