@@ -83,4 +83,14 @@ abstract class ToggleStorageContract {
     fun `delete toggle - not found`() {
         toggleStorage.delete(projectName2, toggleName2).shouldBeNull()
     }
+
+    @Test
+    fun `save - can update`() {
+        val updated = toggle1.copy(
+            defaultVariation = new
+        )
+
+        toggleStorage += updated
+        toggleStorage[toggle1.projectName, toggle1.toggleName] shouldBe updated
+    }
 }

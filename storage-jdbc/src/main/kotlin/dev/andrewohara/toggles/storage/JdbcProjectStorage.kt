@@ -11,7 +11,11 @@ import javax.sql.DataSource
 
 private const val LIST = "SELECT * FROM projects WHERE project_name >= ? ORDER BY project_name ASC LIMIT ?"
 private const val GET = "SELECT * FROM projects WHERE project_name = ?"
-private const val INSERT = "INSERT INTO projects (project_name, created_on) VALUES (?, ?)"
+private const val INSERT = """
+    INSERT INTO projects (project_name, created_on)
+    SELECT ?, ?
+    WHERE NOT EXISTS (SELECT 1 FROM projects WHERE project_name = ?)
+"""
 private const val DELETE = "DELETE FROM projects WHERE project_name = ?"
 
 fun ProjectStorage.Companion.jdbc(dataSource: DataSource) = JdbcProjectStorage(dataSource)
@@ -51,6 +55,7 @@ class JdbcProjectStorage internal constructor(private val dataSource: DataSource
             conn.prepareStatement(INSERT).use { stmt ->
                 stmt.setString(1, project.projectName.value)
                 stmt.setTimestamp(2, Timestamp.from(project.createdOn))
+                stmt.setString(3, project.projectName.value)
 
                 stmt.execute()
             }

@@ -54,7 +54,10 @@ class DynamoProjectStorage internal constructor(
     }
 
     override fun get(projectName: ProjectName) = table[projectName]?.toModel()
-    override fun plusAssign(project: Project) = table.save(project.toDynamo())
+    override fun plusAssign(project: Project) {
+        if (get(project.projectName) != null) return
+        table.save(project.toDynamo())
+    }
     override fun minusAssign(project: Project) = table.minusAssign(project.toDynamo())
 }
 

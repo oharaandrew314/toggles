@@ -26,10 +26,18 @@ private const val INSERT = """
     INSERT INTO toggles (project_name, toggle_name, created_on, updated_on, variations, overrides, default_variation)
     VALUES (?, ?, ?, ?, ?, ?, ?)
 """
+private const val UPDATE = """
+    UPDATE toggles
+    SET updated_on = ?, variations = ?, overrides = ?, default_variation = ?
+    WHERE project_name = ? AND toggle_name = ?
+"""
 private const val DELETE = "DELETE FROM toggles WHERE project_name = ? AND toggle_name = ?"
 
 fun ToggleStorage.Companion.jdbc(dataSource: DataSource) = JdbcToggleStorage(dataSource)
 
+/**
+ * Database agnostic JDBC storage.
+ */
 class JdbcToggleStorage internal constructor(private val dataSource: DataSource): ToggleStorage {
 
     override fun list(
@@ -67,16 +75,29 @@ class JdbcToggleStorage internal constructor(private val dataSource: DataSource)
 
     override fun plusAssign(toggle: Toggle) {
         dataSource.connection.use { conn ->
-            conn.prepareStatement(INSERT).use { stmt ->
-                stmt.setString(1, toggle.projectName.value)
-                stmt.setString(2, toggle.toggleName.value)
-                stmt.setTimestamp(3, Timestamp.from(toggle.createdOn))
-                stmt.setTimestamp(4, Timestamp.from(toggle.updatedOn))
-                stmt.setString(5, toggle.variations.serialize())
-                stmt.setString(6, toggle.overrides.serialize())
-                stmt.setString(7, toggle.defaultVariation.value)
+            val updated = conn.prepareStatement(UPDATE).use { stmt ->
+                stmt.setTimestamp(1, Timestamp.from(toggle.updatedOn))
+                stmt.setString(2, toggle.variations.serialize())
+                stmt.setString(3, toggle.overrides.serialize())
+                stmt.setString(4, toggle.defaultVariation.value)
+                stmt.setString(5, toggle.projectName.value)
+                stmt.setString(6, toggle.toggleName.value)
 
-                stmt.execute()
+                stmt.executeUpdate() == 1
+            }
+
+            if (!updated) {
+                conn.prepareStatement(INSERT).use { stmt ->
+                    stmt.setString(1, toggle.projectName.value)
+                    stmt.setString(2, toggle.toggleName.value)
+                    stmt.setTimestamp(3, Timestamp.from(toggle.createdOn))
+                    stmt.setTimestamp(4, Timestamp.from(toggle.updatedOn))
+                    stmt.setString(5, toggle.variations.serialize())
+                    stmt.setString(6, toggle.overrides.serialize())
+                    stmt.setString(7, toggle.defaultVariation.value)
+
+                    stmt.execute()
+                }
             }
         }
     }

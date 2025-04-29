@@ -74,4 +74,10 @@ abstract class ProjectStorageContract {
     fun `delete - not found`() {
         projectStorage.delete(ProjectName.of("missing")) shouldBe null
     }
+
+    @Test
+    fun `save - cannot update`() {
+        projectStorage += project1.copy(createdOn = project1.createdOn.plusSeconds(30))
+        projectStorage.list(100).toList().shouldContainExactlyInAnyOrder(project1, project2, project3)
+    }
 }
