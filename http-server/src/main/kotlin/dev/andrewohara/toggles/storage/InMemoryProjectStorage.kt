@@ -1,4 +1,4 @@
-package dev.andrewohara.toggles.repo
+package dev.andrewohara.toggles.storage
 
 import dev.andrewohara.toggles.Project
 import dev.andrewohara.toggles.ProjectName
@@ -6,7 +6,7 @@ import dev.andrewohara.utils.pagination.Page
 import dev.andrewohara.utils.pagination.Paginator
 import java.util.concurrent.ConcurrentSkipListSet
 
-fun ProjectRepo.Companion.inMemory() = object: ProjectRepo {
+fun ProjectStorage.Companion.inMemory() = object: ProjectStorage {
     private val projects = ConcurrentSkipListSet<Project>()
 
     override fun list(pageSize: Int) = Paginator<Project, ProjectName> { cursor ->

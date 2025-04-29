@@ -1,4 +1,4 @@
-package dev.andrewohara.toggles.repo
+package dev.andrewohara.toggles.storage
 
 import dev.andrewohara.toggles.ProjectName
 import dev.andrewohara.toggles.Toggle
@@ -7,7 +7,7 @@ import dev.andrewohara.utils.pagination.Page
 import dev.andrewohara.utils.pagination.Paginator
 import java.util.concurrent.ConcurrentSkipListSet
 
-fun TogglesRepo.Companion.inMemory() = object: TogglesRepo {
+fun TogglesStorage.Companion.inMemory() = object: TogglesStorage {
 
     private val toggles = ConcurrentSkipListSet<Toggle>()
 

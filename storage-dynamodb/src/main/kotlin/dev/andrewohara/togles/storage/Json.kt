@@ -1,4 +1,4 @@
-package dev.andrewohara.toggles.http
+package dev.andrewohara.togles.storage
 
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
@@ -16,10 +16,10 @@ import org.http4k.format.withStandardMappings
 import se.ansman.kotshi.KotshiJsonAdapterFactory
 
 @KotshiJsonAdapterFactory
-private object TogglesHttpJsonAdapterFactory : JsonAdapter.Factory by KotshiTogglesHttpJsonAdapterFactory
+private object TogglesDynamoStorageJsonAdapterFactory : JsonAdapter.Factory by TogglesDynamoStorageJsonAdapterFactory
 
 internal val togglesJson = Moshi.Builder()
-    .add(TogglesHttpJsonAdapterFactory)
+    .add(TogglesDynamoStorageJsonAdapterFactory)
     .add(ListAdapter)
     .add(MapAdapter)
     .asConfigurable()

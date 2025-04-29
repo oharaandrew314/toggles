@@ -6,8 +6,10 @@ import dev.andrewohara.toggles.ToggleName
 import dev.andrewohara.toggles.VariationName
 import dev.andrewohara.toggles.Weight
 import org.http4k.contract.Tag
+import se.ansman.kotshi.JsonSerializable
 import java.time.Instant
 
+@JsonSerializable
 data class ToggleDto(
     val projectName: ProjectName,
     val toggleName: ToggleName,

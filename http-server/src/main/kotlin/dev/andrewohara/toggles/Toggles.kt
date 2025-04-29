@@ -1,8 +1,8 @@
 package dev.andrewohara.toggles
 
-import dev.andrewohara.toggles.repo.ProjectRepo
-import dev.andrewohara.toggles.repo.TogglesRepo
-import dev.andrewohara.toggles.repo.getOrFail
+import dev.andrewohara.toggles.storage.ProjectStorage
+import dev.andrewohara.toggles.storage.TogglesStorage
+import dev.andrewohara.toggles.storage.getOrFail
 import dev.andrewohara.utils.result.failIf
 import dev.forkhandles.result4k.asResultOr
 import dev.forkhandles.result4k.begin
@@ -12,8 +12,8 @@ import dev.forkhandles.result4k.peek
 import java.time.Clock
 
 class Toggles(
-    val projects: ProjectRepo,
-    val toggles: TogglesRepo,
+    val projects: ProjectStorage,
+    val toggles: TogglesStorage,
     val pageSize: Int = 100,
     val clock: Clock = Clock.systemUTC()
 )

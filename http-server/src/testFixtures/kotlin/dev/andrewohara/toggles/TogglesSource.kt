@@ -1,8 +1,8 @@
 package dev.andrewohara.toggles
 
-import dev.andrewohara.toggles.repo.ProjectRepo
-import dev.andrewohara.toggles.repo.TogglesRepo
-import dev.andrewohara.toggles.repo.inMemory
+import dev.andrewohara.toggles.storage.ProjectStorage
+import dev.andrewohara.toggles.storage.TogglesStorage
+import dev.andrewohara.toggles.storage.inMemory
 import dev.andrewohara.utils.jdk.toClock
 import java.time.Clock
 import java.time.Instant
@@ -18,7 +18,7 @@ interface InMemoryTogglesSource: TogglesSource {
     override fun createToggles(clock: Clock, pageSize: Int) = Toggles(
         clock = clock,
         pageSize = pageSize,
-        projects = ProjectRepo.inMemory(),
-        toggles = TogglesRepo.inMemory()
+        projects = ProjectStorage.inMemory(),
+        toggles = TogglesStorage.inMemory()
     )
 }

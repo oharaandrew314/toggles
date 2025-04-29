@@ -1,7 +1,9 @@
 package dev.andrewohara.toggles.http
 
 import dev.andrewohara.toggles.ToggleName
+import se.ansman.kotshi.JsonSerializable
 
+@JsonSerializable
 data class TogglesPageDto(
     val items: List<ToggleDto>,
     val next: ToggleName?

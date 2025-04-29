@@ -9,4 +9,5 @@ dependencies {
     testImplementation(testFixtures(project(":core")))
 
     testFixturesApi("dev.forkhandles:result4k-kotest")
+    testFixturesApi(testFixtures(project(":core")))
 }

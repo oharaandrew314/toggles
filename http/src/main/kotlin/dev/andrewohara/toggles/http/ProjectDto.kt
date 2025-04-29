@@ -2,8 +2,10 @@ package dev.andrewohara.toggles.http
 
 import dev.andrewohara.toggles.ProjectName
 import org.http4k.contract.Tag
+import se.ansman.kotshi.JsonSerializable
 import java.time.Instant
 
+@JsonSerializable
 data class ProjectDto(
     val projectName: ProjectName,
     val createdOn: Instant

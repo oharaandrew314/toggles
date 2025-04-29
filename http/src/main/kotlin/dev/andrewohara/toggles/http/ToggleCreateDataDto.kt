@@ -4,7 +4,9 @@ import dev.andrewohara.toggles.SubjectId
 import dev.andrewohara.toggles.ToggleName
 import dev.andrewohara.toggles.VariationName
 import dev.andrewohara.toggles.Weight
+import se.ansman.kotshi.JsonSerializable
 
+@JsonSerializable
 data class ToggleCreateDataDto(
     val toggleName: ToggleName,
     val variations: Map<VariationName, Weight>,

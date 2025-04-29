@@ -1,4 +1,4 @@
-package dev.andrewohara.toggles.repo
+package dev.andrewohara.toggles.storage
 
 import dev.andrewohara.toggles.Project
 import dev.andrewohara.toggles.ProjectName
@@ -6,7 +6,7 @@ import dev.andrewohara.toggles.ProjectNotFound
 import dev.andrewohara.utils.pagination.Paginator
 import dev.forkhandles.result4k.asResultOr
 
-interface ProjectRepo {
+interface ProjectStorage {
     companion object
 
     fun list(pageSize: Int): Paginator<Project, ProjectName>
@@ -16,5 +16,5 @@ interface ProjectRepo {
     fun delete(projectName: ProjectName): Project?
 }
 
-fun ProjectRepo.getOrFail(projectName: ProjectName) =
+fun ProjectStorage.getOrFail(projectName: ProjectName) =
     get(projectName).asResultOr { ProjectNotFound(projectName) }

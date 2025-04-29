@@ -1,5 +1,8 @@
 package dev.andrewohara.toggles.http
 
+import se.ansman.kotshi.JsonSerializable
+
+@JsonSerializable
 data class TogglesErrorDto(
     val message: String
 ) {
