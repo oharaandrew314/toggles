@@ -1,7 +1,7 @@
 package dev.andrewohara.toggles
 
 import dev.andrewohara.toggles.storage.ProjectStorage
-import dev.andrewohara.toggles.storage.TogglesStorage
+import dev.andrewohara.toggles.storage.ToggleStorage
 import dev.andrewohara.toggles.storage.inMemory
 import dev.andrewohara.utils.jdk.toClock
 import java.time.Clock
@@ -19,6 +19,6 @@ interface InMemoryTogglesSource: TogglesSource {
         clock = clock,
         pageSize = pageSize,
         projects = ProjectStorage.inMemory(),
-        toggles = TogglesStorage.inMemory()
+        toggles = ToggleStorage.inMemory()
     )
 }

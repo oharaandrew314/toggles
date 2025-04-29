@@ -7,15 +7,15 @@ import dev.andrewohara.toggles.ToggleNotFound
 import dev.andrewohara.utils.pagination.Paginator
 import dev.forkhandles.result4k.asResultOr
 
-interface TogglesStorage {
+interface ToggleStorage {
     companion object
 
     fun list(projectName: ProjectName, pageSize: Int): Paginator<Toggle, ToggleName>
     operator fun get(projectName: ProjectName, toggleName: ToggleName): Toggle?
     operator fun plusAssign(toggle: Toggle)
     operator fun minusAssign(toggle: Toggle)
-    fun delete(projectName: ProjectName, toggleName: ToggleName): Toggle?
+    fun delete(projectName: ProjectName, toggleName: ToggleName): Toggle? = get(projectName, toggleName)?.also(::minusAssign)
 }
 
-fun TogglesStorage.getOrFail(projectName: ProjectName, toggleName: ToggleName) =
+fun ToggleStorage.getOrFail(projectName: ProjectName, toggleName: ToggleName) =
     get(projectName, toggleName).asResultOr { ToggleNotFound(projectName, toggleName) }

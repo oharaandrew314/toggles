@@ -1,7 +1,7 @@
 package dev.andrewohara.toggles
 
 import dev.andrewohara.toggles.storage.ProjectStorage
-import dev.andrewohara.toggles.storage.TogglesStorage
+import dev.andrewohara.toggles.storage.ToggleStorage
 import dev.andrewohara.toggles.storage.getOrFail
 import dev.andrewohara.utils.result.failIf
 import dev.forkhandles.result4k.asResultOr
@@ -13,7 +13,7 @@ import java.time.Clock
 
 class Toggles(
     val projects: ProjectStorage,
-    val toggles: TogglesStorage,
+    val toggles: ToggleStorage,
     val pageSize: Int = 100,
     val clock: Clock = Clock.systemUTC()
 )

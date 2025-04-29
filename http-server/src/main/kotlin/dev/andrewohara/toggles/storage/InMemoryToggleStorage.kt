@@ -7,7 +7,7 @@ import dev.andrewohara.utils.pagination.Page
 import dev.andrewohara.utils.pagination.Paginator
 import java.util.concurrent.ConcurrentSkipListSet
 
-fun TogglesStorage.Companion.inMemory() = object: TogglesStorage {
+fun ToggleStorage.Companion.inMemory() = object: ToggleStorage {
 
     private val toggles = ConcurrentSkipListSet<Toggle>()
 
@@ -32,10 +32,5 @@ fun TogglesStorage.Companion.inMemory() = object: TogglesStorage {
 
     override fun minusAssign(toggle: Toggle) {
         toggles.removeIf { it.projectName == toggle.projectName && it.toggleName == toggle.toggleName }
-    }
-
-    override fun delete(projectName: ProjectName, toggleName: ToggleName): Toggle? {
-        return get(projectName, toggleName)
-            ?.also(::minusAssign)
     }
 }

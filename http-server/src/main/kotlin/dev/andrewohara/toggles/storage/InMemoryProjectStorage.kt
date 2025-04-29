@@ -18,7 +18,4 @@ fun ProjectStorage.Companion.inMemory() = object: ProjectStorage {
     override fun get(projectName: ProjectName) = projects.find { it.projectName == projectName }
     override fun plusAssign(project: Project) = projects.plusAssign(project)
     override fun minusAssign(project: Project) = projects.minusAssign(project)
-    override fun delete(projectName: ProjectName): Project? {
-        return get(projectName)?.also { projects -= it }
-    }
 }

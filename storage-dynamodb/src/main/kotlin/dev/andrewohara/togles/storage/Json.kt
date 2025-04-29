@@ -16,7 +16,7 @@ import org.http4k.format.withStandardMappings
 import se.ansman.kotshi.KotshiJsonAdapterFactory
 
 @KotshiJsonAdapterFactory
-private object TogglesDynamoStorageJsonAdapterFactory : JsonAdapter.Factory by TogglesDynamoStorageJsonAdapterFactory
+private object TogglesDynamoStorageJsonAdapterFactory : JsonAdapter.Factory by KotshiTogglesDynamoStorageJsonAdapterFactory
 
 internal val togglesJson = Moshi.Builder()
     .add(TogglesDynamoStorageJsonAdapterFactory)

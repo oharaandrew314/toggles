@@ -8,7 +8,7 @@ import org.http4k.connect.amazon.dynamodb.FakeDynamoDb
 import org.http4k.connect.amazon.dynamodb.mapper.tableMapper
 import org.http4k.connect.amazon.dynamodb.model.TableName
 
-class DynamoTogglesStorageTest: ProjectStorageContract() {
+class DynamoProjectStorageTest: ProjectStorageContract() {
     override fun createProjectRepo() = FakeDynamoDb()
         .client()
         .tableMapper(TableName.of("projects"), DynamoProjectStorage.primaryIndex)

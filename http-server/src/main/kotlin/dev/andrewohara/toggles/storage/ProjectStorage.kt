@@ -13,7 +13,7 @@ interface ProjectStorage {
     operator fun get(projectName: ProjectName): Project?
     operator fun plusAssign(project: Project)
     operator fun minusAssign(project: Project)
-    fun delete(projectName: ProjectName): Project?
+    fun delete(projectName: ProjectName): Project? = get(projectName)?.also(::minusAssign)
 }
 
 fun ProjectStorage.getOrFail(projectName: ProjectName) =

@@ -6,7 +6,7 @@ import dev.andrewohara.toggles.Toggle
 import dev.andrewohara.toggles.ToggleName
 import dev.andrewohara.toggles.VariationName
 import dev.andrewohara.toggles.Weight
-import dev.andrewohara.toggles.storage.TogglesStorage
+import dev.andrewohara.toggles.storage.ToggleStorage
 import dev.andrewohara.utils.pagination.Page
 import dev.andrewohara.utils.pagination.Paginator
 import org.http4k.connect.amazon.dynamodb.DynamoDb
@@ -21,17 +21,17 @@ import org.http4k.format.autoDynamoLens
 import se.ansman.kotshi.JsonSerializable
 import java.time.Instant
 
-fun TogglesStorage.Companion.dynamoDb(
+fun ToggleStorage.Companion.dynamoDb(
     table: DynamoDbTableMapper<DynamoToggle, ProjectName, ToggleName>
-) = DynamoTogglesStorage(table)
+) = DynamoToggleStorage(table)
 
-fun TogglesStorage.Companion.dynamoDb(
+fun ToggleStorage.Companion.dynamoDb(
     dynamoDb: DynamoDb, tableName: TableName
-) = DynamoTogglesStorage(dynamoDb.tableMapper(tableName, DynamoTogglesStorage.primaryIndex))
+) = DynamoToggleStorage(dynamoDb.tableMapper(tableName, DynamoToggleStorage.primaryIndex))
 
-class DynamoTogglesStorage internal constructor(
+class DynamoToggleStorage internal constructor(
     private val table: DynamoDbTableMapper<DynamoToggle, ProjectName, ToggleName>
-): TogglesStorage {
+): ToggleStorage {
     companion object {
         val primaryIndex = DynamoDbTableMapperSchema.Primary<DynamoToggle, ProjectName, ToggleName>(
             hashKeyAttribute = ProjectName.attribute,
@@ -46,6 +46,7 @@ class DynamoTogglesStorage internal constructor(
     ) =  Paginator<Toggle, ToggleName> { cursor ->
         val page = table.index(primaryIndex).queryPage(
             HashKey = projectName,
+            Limit = pageSize,
             ExclusiveStartKey = cursor?.let { Key(ProjectName.attribute of projectName, ToggleName.attribute of cursor) }
         )
 

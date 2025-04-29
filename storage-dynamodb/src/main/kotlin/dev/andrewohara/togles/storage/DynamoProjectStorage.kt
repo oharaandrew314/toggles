@@ -37,7 +37,8 @@ class DynamoProjectStorage internal constructor(
 
     override fun list(pageSize: Int) = Paginator<Project, ProjectName> { cursor ->
         val page = table.index(primaryIndex).scanPage(
-            ExclusiveStartKey = cursor?.let { Key(ProjectName.attribute of cursor) }
+            ExclusiveStartKey = cursor?.let { Key(ProjectName.attribute of cursor) },
+            Limit = pageSize
         )
 
         Page(
@@ -49,8 +50,6 @@ class DynamoProjectStorage internal constructor(
     override fun get(projectName: ProjectName) = table[projectName]?.toModel()
     override fun plusAssign(project: Project) = table.save(project.toDynamo())
     override fun minusAssign(project: Project) = table.minusAssign(project.toDynamo())
-    override fun delete(projectName: ProjectName) = get(projectName)?.also(::minusAssign)
-
 }
 
 @JsonSerializable
