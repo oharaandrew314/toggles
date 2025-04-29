@@ -30,7 +30,7 @@ class VariationName private constructor(value: String): StringValue(value), Comp
 }
 
 class SubjectId private constructor(value: String): StringValue(value), ComparableValue<SubjectId, String> {
-    companion object: StringValueFactory<SubjectId>(::SubjectId)
+    companion object: StringValueFactory<SubjectId>(::SubjectId, 64.maxLength)
 }
 
 class Weight private constructor(value: Int): IntValue(value), ComparableValue<Weight, Int> {

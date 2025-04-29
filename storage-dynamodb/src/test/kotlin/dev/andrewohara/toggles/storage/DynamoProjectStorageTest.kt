@@ -9,9 +9,9 @@ import org.http4k.connect.amazon.dynamodb.mapper.tableMapper
 import org.http4k.connect.amazon.dynamodb.model.TableName
 
 class DynamoProjectStorageTest: ProjectStorageContract() {
-    override fun createProjectRepo() = FakeDynamoDb()
-        .client()
-        .tableMapper(TableName.of("projects"), DynamoProjectStorage.primaryIndex)
-        .also { it.createTable().shouldBeSuccess() }
-        .let { ProjectStorage.dynamoDb(it) }
+    override fun createStorage() = DynamoProjectStorage(
+        dynamoDb = FakeDynamoDb().client(),
+        tableName = TableName.of("projects"),
+        autoCreate = true
+    )
 }

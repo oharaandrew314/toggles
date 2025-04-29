@@ -9,9 +9,12 @@ import dev.andrewohara.toggles.Weight
 import dev.andrewohara.toggles.storage.ToggleStorage
 import dev.andrewohara.utils.pagination.Page
 import dev.andrewohara.utils.pagination.Paginator
+import dev.forkhandles.result4k.asFailure
+import dev.forkhandles.result4k.flatMapFailure
+import dev.forkhandles.result4k.onFailure
 import org.http4k.connect.amazon.dynamodb.DynamoDb
-import org.http4k.connect.amazon.dynamodb.mapper.DynamoDbTableMapper
-import org.http4k.connect.amazon.dynamodb.mapper.DynamoDbTableMapperSchema
+import org.http4k.connect.amazon.dynamodb.describeTable
+import org.http4k.connect.amazon.dynamodb.mapper.DynamoDbTableMapperSchema.Primary
 import org.http4k.connect.amazon.dynamodb.mapper.minusAssign
 import org.http4k.connect.amazon.dynamodb.mapper.plusAssign
 import org.http4k.connect.amazon.dynamodb.mapper.tableMapper
@@ -21,30 +24,34 @@ import org.http4k.format.autoDynamoLens
 import se.ansman.kotshi.JsonSerializable
 import java.time.Instant
 
-fun ToggleStorage.Companion.dynamoDb(
-    table: DynamoDbTableMapper<DynamoToggle, ProjectName, ToggleName>
-) = DynamoToggleStorage(table)
 
 fun ToggleStorage.Companion.dynamoDb(
-    dynamoDb: DynamoDb, tableName: TableName
-) = DynamoToggleStorage(dynamoDb.tableMapper(tableName, DynamoToggleStorage.primaryIndex))
+    dynamoDb: DynamoDb, tableName: TableName, autoCreate: Boolean = false
+) = DynamoToggleStorage(dynamoDb, tableName, autoCreate)
 
 class DynamoToggleStorage internal constructor(
-    private val table: DynamoDbTableMapper<DynamoToggle, ProjectName, ToggleName>
+    dynamoDb: DynamoDb,
+    tableName: TableName,
+    private val autoCreate: Boolean = false
 ): ToggleStorage {
-    companion object {
-        val primaryIndex = DynamoDbTableMapperSchema.Primary<DynamoToggle, ProjectName, ToggleName>(
-            hashKeyAttribute = ProjectName.attribute,
-            sortKeyAttribute = ToggleName.attribute,
-            lens = togglesJson.autoDynamoLens()
-        )
+
+    private val table = dynamoDb.tableMapper(tableName, Primary<DynamoToggle, ProjectName, ToggleName>(
+        hashKeyAttribute = ProjectName.attribute,
+        sortKeyAttribute = ToggleName.attribute,
+        lens = togglesJson.autoDynamoLens()
+    ))
+
+    init {
+        dynamoDb.describeTable(tableName)
+            .flatMapFailure { if (autoCreate) table.createTable() else it.asFailure() }
+            .onFailure { it.reason.throwIt() }
     }
 
     override fun list(
         projectName: ProjectName,
         pageSize: Int
     ) =  Paginator<Toggle, ToggleName> { cursor ->
-        val page = table.index(primaryIndex).queryPage(
+        val page = table.primaryIndex().queryPage(
             HashKey = projectName,
             Limit = pageSize,
             ExclusiveStartKey = cursor?.let { Key(ProjectName.attribute of projectName, ToggleName.attribute of cursor) }
@@ -64,7 +71,7 @@ class DynamoToggleStorage internal constructor(
 }
 
 @JsonSerializable
-data class DynamoToggle(
+internal data class DynamoToggle(
     val projectName: ProjectName,
     val toggleName: ToggleName,
     val createdOn: Instant,

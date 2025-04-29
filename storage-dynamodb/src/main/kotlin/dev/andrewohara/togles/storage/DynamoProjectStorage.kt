@@ -5,8 +5,11 @@ import dev.andrewohara.toggles.ProjectName
 import dev.andrewohara.toggles.storage.ProjectStorage
 import dev.andrewohara.utils.pagination.Page
 import dev.andrewohara.utils.pagination.Paginator
+import dev.forkhandles.result4k.asFailure
+import dev.forkhandles.result4k.flatMapFailure
+import dev.forkhandles.result4k.onFailure
 import org.http4k.connect.amazon.dynamodb.DynamoDb
-import org.http4k.connect.amazon.dynamodb.mapper.DynamoDbTableMapper
+import org.http4k.connect.amazon.dynamodb.describeTable
 import org.http4k.connect.amazon.dynamodb.mapper.DynamoDbTableMapperSchema.Primary
 import org.http4k.connect.amazon.dynamodb.mapper.minusAssign
 import org.http4k.connect.amazon.dynamodb.mapper.tableMapper
@@ -17,26 +20,29 @@ import se.ansman.kotshi.JsonSerializable
 import java.time.Instant
 
 fun ProjectStorage.Companion.dynamoDb(
-    table: DynamoDbTableMapper<DynamoProject, ProjectName, Unit>
-) = DynamoProjectStorage(table)
-
-fun ProjectStorage.Companion.dynamoDb(
-    dynamoDb: DynamoDb, tableName: TableName
-) = DynamoProjectStorage(dynamoDb.tableMapper(tableName, DynamoProjectStorage.primaryIndex))
+    dynamoDb: DynamoDb, tableName: TableName, autoCreate: Boolean = false
+) = DynamoProjectStorage(dynamoDb, tableName, autoCreate)
 
 class DynamoProjectStorage internal constructor(
-    private val table: DynamoDbTableMapper<DynamoProject, ProjectName, Unit>
+    dynamoDb: DynamoDb,
+    tableName: TableName,
+    private val autoCreate: Boolean = false
 ): ProjectStorage {
-    companion object {
-        val primaryIndex = Primary<DynamoProject, ProjectName, Unit>(
-            hashKeyAttribute = ProjectName.attribute,
-            sortKeyAttribute = null,
-            lens = togglesJson.autoDynamoLens()
-        )
+
+    private val table = dynamoDb.tableMapper(tableName, Primary<DynamoProject, ProjectName, Unit>(
+        hashKeyAttribute = ProjectName.attribute,
+        sortKeyAttribute = null,
+        lens = togglesJson.autoDynamoLens<DynamoProject>()
+    ))
+
+    init {
+        dynamoDb.describeTable(tableName)
+            .flatMapFailure { if (autoCreate) table.createTable() else it.asFailure() }
+            .onFailure { it.reason.throwIt() }
     }
 
     override fun list(pageSize: Int) = Paginator<Project, ProjectName> { cursor ->
-        val page = table.index(primaryIndex).scanPage(
+        val page = table.primaryIndex().scanPage(
             ExclusiveStartKey = cursor?.let { Key(ProjectName.attribute of cursor) },
             Limit = pageSize
         )
@@ -53,7 +59,7 @@ class DynamoProjectStorage internal constructor(
 }
 
 @JsonSerializable
-data class DynamoProject(
+internal data class DynamoProject(
     val projectName: ProjectName,
     val createdOn: Instant
 )
