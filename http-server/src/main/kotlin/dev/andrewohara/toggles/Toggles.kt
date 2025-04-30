@@ -1,10 +1,9 @@
 package dev.andrewohara.toggles
 
-import dev.andrewohara.toggles.storage.ProjectStorage
 import dev.andrewohara.toggles.storage.ToggleStorage
-import dev.andrewohara.toggles.storage.getOrFail
+import dev.andrewohara.toggles.storage.getProjectOrFail
+import dev.andrewohara.toggles.storage.getToggleOrFail
 import dev.andrewohara.utils.result.failIf
-import dev.forkhandles.result4k.asResultOr
 import dev.forkhandles.result4k.begin
 import dev.forkhandles.result4k.flatMap
 import dev.forkhandles.result4k.map
@@ -12,8 +11,7 @@ import dev.forkhandles.result4k.peek
 import java.time.Clock
 
 class Toggles(
-    val projects: ProjectStorage,
-    val toggles: ToggleStorage,
+    val storage: ToggleStorage,
     val pageSize: Int = 100,
     val clock: Clock = Clock.systemUTC()
 )
@@ -21,39 +19,41 @@ class Toggles(
 // Projects
 
 fun Toggles.createProject(data: ProjectData) = begin
-    .failIf({projects[data.projectName] != null}, { ProjectAlreadyExists(data.projectName)})
+    .failIf({storage.getProject(data.projectName) != null}, { ProjectAlreadyExists(data.projectName)})
     .map { Project(data.projectName, clock.instant()) }
-    .peek(projects::plusAssign)
+    .peek(storage::upsertProject)
 
 fun Toggles.listProjects(cursor: ProjectName?) =
-    projects.list(pageSize)[cursor]
+    storage.listProjects(pageSize)[cursor]
 
-fun Toggles.deleteProject(projectName: ProjectName) = begin
-    .failIf({toggles.list(projectName, pageSize).any()}, {ProjectNotEmpty(projectName)})
-    .flatMap { projects.delete(projectName).asResultOr { ProjectNotFound(projectName) } }
+fun Toggles.deleteProject(projectName: ProjectName) = storage
+    .getProjectOrFail(projectName)
+    .failIf({storage.listToggles(projectName, pageSize).any()}, {ProjectNotEmpty(projectName)})
+    .peek { storage.deleteProject(projectName) }
 
 // Toggles
 
-fun Toggles.listToggles(projectName: ProjectName, cursor: ToggleName?) = projects
-    .getOrFail(projectName)
-    .map { toggles.list(projectName, pageSize)[cursor] }
+fun Toggles.listToggles(projectName: ProjectName, cursor: ToggleName?) = storage
+    .getProjectOrFail(projectName)
+    .map { storage.listToggles(projectName, pageSize)[cursor] }
 
-fun Toggles.getToggle(projectName: ProjectName, toggleName: ToggleName) = projects
-    .getOrFail(projectName)
-    .flatMap { toggles[projectName, toggleName].asResultOr { ToggleNotFound(projectName, toggleName) } }
+fun Toggles.getToggle(projectName: ProjectName, toggleName: ToggleName) = storage
+    .getProjectOrFail(projectName)
+    .flatMap { storage.getToggleOrFail(projectName, toggleName) }
 
-fun Toggles.createToggle(projectName: ProjectName, data: ToggleCreateData) = projects
-    .getOrFail(projectName)
-    .failIf({toggles[projectName, data.toggleName] != null}, { ToggleAlreadyExists(projectName, data.toggleName) })
+fun Toggles.createToggle(projectName: ProjectName, data: ToggleCreateData) = storage
+    .getProjectOrFail(projectName)
+    .failIf({ storage.getToggle(projectName, data.toggleName) != null}, { ToggleAlreadyExists(projectName, data.toggleName) })
     .map { data.toToggle(projectName, clock.instant()) }
-    .peek(toggles::plusAssign)
+    .peek(storage::upsertToggle)
 
-fun Toggles.updateToggle(projectName: ProjectName, toggleName: ToggleName, data: ToggleState) = projects
-    .getOrFail(projectName)
-    .flatMap { toggles.getOrFail(projectName, toggleName) }
+fun Toggles.updateToggle(projectName: ProjectName, toggleName: ToggleName, data: ToggleState) = storage
+    .getProjectOrFail(projectName)
+    .flatMap { storage.getToggleOrFail(projectName, toggleName) }
     .map { it.with(data, clock.instant()) }
-    .peek(toggles::plusAssign)
+    .peek(storage::upsertToggle)
 
-fun Toggles.deleteToggle(projectName: ProjectName, toggleName: ToggleName) = projects
-    .getOrFail(projectName)
-    .flatMap { toggles.delete(projectName, toggleName).asResultOr { ToggleNotFound(projectName, toggleName) } }
+fun Toggles.deleteToggle(projectName: ProjectName, toggleName: ToggleName) = storage
+    .getProjectOrFail(projectName)
+    .flatMap { storage.getToggleOrFail(projectName, toggleName) }
+    .peek { storage.deleteToggle(projectName, toggleName) }

@@ -1,5 +1,6 @@
 package dev.andrewohara.toggles.storage
 
+import dev.andrewohara.toggles.Project
 import dev.andrewohara.toggles.ProjectName
 import dev.andrewohara.toggles.SubjectId
 import dev.andrewohara.toggles.Toggle
@@ -15,23 +16,32 @@ import java.sql.ResultSet
 import java.sql.Timestamp
 import javax.sql.DataSource
 
-private const val LIST = """
+private const val LIST_TOGGLES = """
     SELECT * FROM toggles
     WHERE project_name = ? AND toggle_name >= ?
     ORDER BY project_name ASC, toggle_name ASC
     LIMIT ?
 """
-private const val GET = "SELECT * FROM toggles WHERE project_name = ? AND toggle_name = ?"
-private const val INSERT = """
+private const val GET_TOGGLE = "SELECT * FROM toggles WHERE project_name = ? AND toggle_name = ?"
+private const val INSERT_TOGGLE = """
     INSERT INTO toggles (project_name, toggle_name, created_on, updated_on, variations, overrides, default_variation)
     VALUES (?, ?, ?, ?, ?, ?, ?)
 """
-private const val UPDATE = """
+private const val UPDATE_TOGGLE = """
     UPDATE toggles
     SET updated_on = ?, variations = ?, overrides = ?, default_variation = ?
     WHERE project_name = ? AND toggle_name = ?
 """
-private const val DELETE = "DELETE FROM toggles WHERE project_name = ? AND toggle_name = ?"
+private const val DELETE_TOGGLE = "DELETE FROM toggles WHERE project_name = ? AND toggle_name = ?"
+
+private const val LIST_PROJECTS = "SELECT * FROM projects WHERE project_name >= ? ORDER BY project_name ASC LIMIT ?"
+private const val GET_PROJECT = "SELECT * FROM projects WHERE project_name = ?"
+private const val INSERT_PROJECT = """
+    INSERT INTO projects (project_name, created_on)
+    SELECT ?, ?
+    WHERE NOT EXISTS (SELECT 1 FROM projects WHERE project_name = ?)
+"""
+private const val DELETE_PROJECT = "DELETE FROM projects WHERE project_name = ?"
 
 fun ToggleStorage.Companion.jdbc(dataSource: DataSource) = JdbcToggleStorage(dataSource)
 
@@ -40,12 +50,62 @@ fun ToggleStorage.Companion.jdbc(dataSource: DataSource) = JdbcToggleStorage(dat
  */
 class JdbcToggleStorage internal constructor(private val dataSource: DataSource): ToggleStorage {
 
-    override fun list(
+    override fun listProjects(pageSize: Int) = Paginator<Project, ProjectName> { cursor ->
+        val page = dataSource.connection.use { conn ->
+            conn.prepareStatement(LIST_PROJECTS).use { stmt ->
+                stmt.setString(1, cursor?.value ?: "")
+                stmt.setInt(2, pageSize + 1)
+
+                stmt.executeQuery().use { rs ->
+                    rs.toSequence().map { it.toProject() }.toList()
+                }
+            }
+        }
+
+        Page(
+            items = page.take(pageSize),
+            next = page.drop(pageSize).firstOrNull()?.projectName
+        )
+    }
+
+    override fun getProject(projectName: ProjectName) = dataSource.connection.use { conn ->
+        conn.prepareStatement(GET_PROJECT).use { stmt ->
+            stmt.setString(1, projectName.value)
+
+            stmt.executeQuery().use { rs ->
+                if (rs.next()) rs.toProject() else null
+            }
+        }
+    }
+
+    override fun upsertProject(project: Project) {
+        dataSource.connection.use { conn ->
+            conn.prepareStatement(INSERT_PROJECT).use { stmt ->
+                stmt.setString(1, project.projectName.value)
+                stmt.setTimestamp(2, Timestamp.from(project.createdOn))
+                stmt.setString(3, project.projectName.value)
+
+                stmt.execute()
+            }
+        }
+    }
+
+    override fun deleteProject(projectName: ProjectName) {
+        dataSource.connection.use { conn ->
+            conn.prepareStatement(DELETE_PROJECT).use { stmt ->
+                stmt.setString(1, projectName.value)
+
+                stmt.execute()
+            }
+        }
+    }
+
+    override fun listToggles(
         projectName: ProjectName,
         pageSize: Int
     ) = Paginator<Toggle, ToggleName> { cursor ->
         val page = dataSource.connection.use { conn ->
-            conn.prepareStatement(LIST).use { stmt ->
+            conn.prepareStatement(LIST_TOGGLES).use { stmt ->
                 stmt.setString(1, projectName.value)
                 stmt.setString(2, cursor?.value ?: "")
                 stmt.setInt(3, pageSize + 1)
@@ -62,8 +122,8 @@ class JdbcToggleStorage internal constructor(private val dataSource: DataSource)
         )
     }
 
-    override fun get(projectName: ProjectName, toggleName: ToggleName) = dataSource.connection.use { conn ->
-        conn.prepareStatement(GET).use { stmt ->
+    override fun getToggle(projectName: ProjectName, toggleName: ToggleName) = dataSource.connection.use { conn ->
+        conn.prepareStatement(GET_TOGGLE).use { stmt ->
             stmt.setString(1, projectName.value)
             stmt.setString(2, toggleName.value)
 
@@ -73,9 +133,9 @@ class JdbcToggleStorage internal constructor(private val dataSource: DataSource)
         }
     }
 
-    override fun plusAssign(toggle: Toggle) {
+    override fun upsertToggle(toggle: Toggle) {
         dataSource.connection.use { conn ->
-            val updated = conn.prepareStatement(UPDATE).use { stmt ->
+            val updated = conn.prepareStatement(UPDATE_TOGGLE).use { stmt ->
                 stmt.setTimestamp(1, Timestamp.from(toggle.updatedOn))
                 stmt.setString(2, toggle.variations.serialize())
                 stmt.setString(3, toggle.overrides.serialize())
@@ -87,7 +147,7 @@ class JdbcToggleStorage internal constructor(private val dataSource: DataSource)
             }
 
             if (!updated) {
-                conn.prepareStatement(INSERT).use { stmt ->
+                conn.prepareStatement(INSERT_TOGGLE).use { stmt ->
                     stmt.setString(1, toggle.projectName.value)
                     stmt.setString(2, toggle.toggleName.value)
                     stmt.setTimestamp(3, Timestamp.from(toggle.createdOn))
@@ -102,11 +162,11 @@ class JdbcToggleStorage internal constructor(private val dataSource: DataSource)
         }
     }
 
-    override fun minusAssign(toggle: Toggle) {
+    override fun deleteToggle(projectName: ProjectName, toggleName: ToggleName) {
         dataSource.connection.use { conn ->
-            conn.prepareStatement(DELETE).use { stmt ->
-                stmt.setString(1, toggle.projectName.value)
-                stmt.setString(2, toggle.toggleName.value)
+            conn.prepareStatement(DELETE_TOGGLE).use { stmt ->
+                stmt.setString(1, projectName.value)
+                stmt.setString(2, toggleName.value)
 
                 stmt.execute()
             }
@@ -122,6 +182,11 @@ private fun ResultSet.toToggle() = Toggle(
     variations = getString("variations").deserialize(VariationName, Weight),
     overrides = getString("overrides").deserialize(SubjectId, VariationName),
     defaultVariation = VariationName.parse(getString("default_variation"))
+)
+
+private fun ResultSet.toProject() = Project(
+    projectName = ProjectName.parse(getString("project_name")),
+    createdOn = getTimestamp("created_on").toInstant()
 )
 
 private fun <K: Value<*>, V: Value<*>> String.deserialize(

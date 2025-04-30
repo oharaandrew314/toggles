@@ -1,5 +1,6 @@
 package dev.andrewohara.toggles.storage
 
+import dev.andrewohara.toggles.Project
 import dev.andrewohara.toggles.ProjectName
 import dev.andrewohara.toggles.Toggle
 import dev.andrewohara.toggles.ToggleName
@@ -10,8 +11,11 @@ import java.util.concurrent.ConcurrentSkipListSet
 fun ToggleStorage.Companion.inMemory() = object: ToggleStorage {
 
     private val toggles = ConcurrentSkipListSet<Toggle>()
+    private val projects = ConcurrentSkipListSet<Project>()
 
-    override fun list(projectName: ProjectName, pageSize: Int) = Paginator<Toggle, ToggleName> { cursor ->
+    // Toggles
+
+    override fun listToggles(projectName: ProjectName, pageSize: Int) = Paginator<Toggle, ToggleName> { cursor ->
         val results = toggles
             .filter { it.projectName == projectName }
             .sorted()
@@ -21,16 +25,33 @@ fun ToggleStorage.Companion.inMemory() = object: ToggleStorage {
         Page(page, page.lastOrNull()?.toggleName?.takeIf { page.size < results.size })
     }
 
-    override fun get(projectName: ProjectName, toggleName: ToggleName): Toggle? {
+    override fun getToggle(projectName: ProjectName, toggleName: ToggleName): Toggle? {
         return toggles.find { it.projectName == projectName && it.toggleName == toggleName }
     }
 
-    override fun plusAssign(toggle: Toggle) {
-        minusAssign(toggle)
+    override fun upsertToggle(toggle: Toggle) {
+        deleteToggle(toggle.projectName, toggle.toggleName)
         toggles += toggle
     }
 
-    override fun minusAssign(toggle: Toggle) {
-        toggles.removeIf { it.projectName == toggle.projectName && it.toggleName == toggle.toggleName }
+    override fun deleteToggle(projectName: ProjectName, toggleName: ToggleName) {
+        toggles.removeIf { it.projectName == projectName && it.toggleName == toggleName }
     }
+
+    // Projects
+
+    override fun listProjects(pageSize: Int) = Paginator<Project, ProjectName> { cursor ->
+        val results = projects.sorted().dropWhile { cursor != null && it.projectName <= cursor }
+        val page = results.take(pageSize)
+        Page(page, page.lastOrNull()?.projectName?.takeIf { page.size < results.size })
+    }
+
+    override fun getProject(projectName: ProjectName) = projects.find { it.projectName == projectName }
+
+    override fun upsertProject(project: Project) = projects.plusAssign(project)
+
+    override fun deleteProject(projectName: ProjectName) {
+        projects.removeIf { it.projectName == projectName }
+    }
+
 }

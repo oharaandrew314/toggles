@@ -19,16 +19,17 @@ fun DataSource.execute(sql: String) {
     }
 }
 
-fun DataSource.truncate() = apply {
-    execute("TRUNCATE TABLE projects")
-    execute("TRUNCATE TABLE toggles")
-}
-
-fun JdbcDatabaseContainer<*>.toDataSource(): DataSource {
+fun JdbcDatabaseContainer<*>.toTogglesStorage(): ToggleStorage {
     val config = HikariConfig().also {
         it.jdbcUrl = jdbcUrl
         it.username = username
         it.password = password
     }
-    return HikariDataSource(config)
+
+    val dataSource = HikariDataSource(config).apply {
+        execute("TRUNCATE TABLE projects")
+        execute("TRUNCATE TABLE toggles")
+    }
+
+    return ToggleStorage.jdbc(dataSource)
 }

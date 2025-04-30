@@ -1,14 +1,22 @@
 package dev.andrewohara.toggles.storage
 
+import dev.andrewohara.toggles.ProjectStorageContract
 import dev.andrewohara.toggles.ToggleStorageContract
 import dev.andrewohara.togles.storage.dynamoDb
 import org.http4k.connect.amazon.dynamodb.FakeDynamoDb
 import org.http4k.connect.amazon.dynamodb.model.TableName
 
+private fun create() = ToggleStorage.dynamoDb(
+    dynamoDb = FakeDynamoDb().client(),
+    projectsTableName = TableName.of("projects"),
+    togglesTableName = TableName.of("toggles"),
+    autoCreate = true
+)
+
 class DynamoToggleStorageTest: ToggleStorageContract() {
-    override fun createStorage() = ToggleStorage.dynamoDb(
-        dynamoDb = FakeDynamoDb().client(),
-        tableName = TableName.of("toggles"),
-        autoCreate = true
-    )
+    override fun createStorage() = create()
+}
+
+class DynamoProjectStorageTest: ProjectStorageContract() {
+    override fun createStorage() = create()
 }

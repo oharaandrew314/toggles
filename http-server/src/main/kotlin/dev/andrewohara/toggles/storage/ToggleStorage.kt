@@ -1,6 +1,8 @@
 package dev.andrewohara.toggles.storage
 
+import dev.andrewohara.toggles.Project
 import dev.andrewohara.toggles.ProjectName
+import dev.andrewohara.toggles.ProjectNotFound
 import dev.andrewohara.toggles.Toggle
 import dev.andrewohara.toggles.ToggleName
 import dev.andrewohara.toggles.ToggleNotFound
@@ -10,12 +12,21 @@ import dev.forkhandles.result4k.asResultOr
 interface ToggleStorage {
     companion object
 
-    fun list(projectName: ProjectName, pageSize: Int): Paginator<Toggle, ToggleName>
-    operator fun get(projectName: ProjectName, toggleName: ToggleName): Toggle?
-    operator fun plusAssign(toggle: Toggle)
-    operator fun minusAssign(toggle: Toggle)
-    fun delete(projectName: ProjectName, toggleName: ToggleName): Toggle? = get(projectName, toggleName)?.also(::minusAssign)
+    // Projects
+    fun listProjects(pageSize: Int): Paginator<Project, ProjectName>
+    fun getProject(projectName: ProjectName): Project?
+    fun upsertProject(project: Project)
+    fun deleteProject(projectName: ProjectName)
+
+    // Toggles
+    fun listToggles(projectName: ProjectName, pageSize: Int): Paginator<Toggle, ToggleName>
+    fun getToggle(projectName: ProjectName, toggleName: ToggleName): Toggle?
+    fun upsertToggle(toggle: Toggle)
+    fun deleteToggle(projectName: ProjectName, toggleName: ToggleName)
 }
 
-fun ToggleStorage.getOrFail(projectName: ProjectName, toggleName: ToggleName) =
-    get(projectName, toggleName).asResultOr { ToggleNotFound(projectName, toggleName) }
+fun ToggleStorage.getToggleOrFail(projectName: ProjectName, toggleName: ToggleName) =
+    getToggle(projectName, toggleName).asResultOr { ToggleNotFound(projectName, toggleName) }
+
+fun ToggleStorage.getProjectOrFail(projectName: ProjectName) =
+    getProject(projectName).asResultOr { ProjectNotFound(projectName) }
