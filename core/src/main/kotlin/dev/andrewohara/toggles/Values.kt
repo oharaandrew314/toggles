@@ -11,9 +11,11 @@ import dev.forkhandles.values.minLength
 import dev.forkhandles.values.minValue
 import dev.forkhandles.values.regex
 
+private val tokenValidator = "[a-zA-Z0-9-_]+".regex
+
 private val nameValidation = 4.minLength
     .and(32.maxLength)
-    .and("[a-zA-Z0-9-_]+".regex)
+    .and(tokenValidator)
 
 class ProjectName private constructor(value: String): StringValue(value), ComparableValue<ProjectName, String> {
     companion object: StringValueFactory<ProjectName>(::ProjectName, nameValidation)
@@ -35,4 +37,11 @@ class SubjectId private constructor(value: String): StringValue(value), Comparab
 
 class Weight private constructor(value: Int): IntValue(value), ComparableValue<Weight, Int> {
     companion object: IntValueFactory<Weight>(::Weight, 0.minValue)
+}
+
+class Environment(value: String): StringValue(value) {
+    companion object: StringValueFactory<Environment>(
+        fn =::Environment,
+        validation = 2.minLength.and(32.maxLength).and(tokenValidator)
+    )
 }

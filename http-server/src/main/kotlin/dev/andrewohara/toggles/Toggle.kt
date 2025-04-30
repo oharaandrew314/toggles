@@ -7,9 +7,7 @@ data class Toggle(
     val toggleName: ToggleName,
     val createdOn: Instant,
     val updatedOn: Instant,
-    val variations: Map<VariationName, Weight>,
-    val overrides: Map<SubjectId, VariationName>,
-    val defaultVariation: VariationName
+    val environments: Map<Environment, ToggleState>
 ): Comparable<Toggle> {
     override fun compareTo(other: Toggle) = when(val res = projectName.compareTo(other.projectName)) {
         0 -> toggleName.compareTo(other.toggleName)
