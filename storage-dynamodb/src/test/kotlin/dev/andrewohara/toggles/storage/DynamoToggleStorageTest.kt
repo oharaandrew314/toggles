@@ -10,6 +10,7 @@ private fun create() = Storage.dynamoDb(
     dynamoDb = FakeDynamoDb().client(),
     projectsTableName = TableName.of("projects"),
     togglesTableName = TableName.of("toggles"),
+    apiKeysTableName = TableName.of("api-keys"),
     autoCreate = true
 )
 
@@ -18,5 +19,9 @@ class DynamoToggleStorageTest: ToggleStorageContract() {
 }
 
 class DynamoProjectStorageTest: ProjectStorageContract() {
+    override fun createStorage() = create()
+}
+
+class DynamoApiKeyStorageTest: ProjectStorageContract() {
     override fun createStorage() = create()
 }

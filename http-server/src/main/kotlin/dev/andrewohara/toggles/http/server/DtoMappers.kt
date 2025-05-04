@@ -1,5 +1,6 @@
 package dev.andrewohara.toggles.http.server
 
+import dev.andrewohara.toggles.ApiKeyNotFound
 import dev.andrewohara.toggles.EnvironmentInUse
 import dev.andrewohara.toggles.Project
 import dev.andrewohara.toggles.ProjectAlreadyExists
@@ -62,6 +63,7 @@ fun TogglesError.toDto() = TogglesErrorDto(
         is ProjectAlreadyExists -> "Project already exists: $projectName"
         is ToggleAlreadyExists -> "Toggle already exists: $projectName/$toggleName"
         is EnvironmentInUse -> "Environment in use: $projectName/$environmentName"
+        is ApiKeyNotFound -> "Api Key not found: $projectName/$environmentName"
     }
 )
 

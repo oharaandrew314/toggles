@@ -9,3 +9,5 @@ data class EnvironmentInUse(val projectName: ProjectName, val environmentName: E
 
 data class ToggleAlreadyExists(val projectName: ProjectName, val toggleName: ToggleName): TogglesError
 data class ToggleNotFound(val projectName: ProjectName, val toggleName: ToggleName): TogglesError
+
+data class ApiKeyNotFound(val projectName: ProjectName, val environmentName: EnvironmentName): TogglesError

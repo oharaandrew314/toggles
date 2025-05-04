@@ -40,7 +40,7 @@ abstract class TogglesHttpContract: ServerContractBase() {
 
         val expected = Toggle(
             projectName = projectName1,
-            uniqueId = UniqueId.of("DS3RJAM1"),
+            uniqueId = UniqueId.of("AM1p6cnc"),
             toggleName = toggleName1,
             variations = oldNewData.variations,
             defaultVariation = oldNewData.defaultVariation,

@@ -1,6 +1,5 @@
 package dev.andrewohara.toggles
 
-import dev.andrewohara.toggles.apikeys.ApiKeys
 import dev.andrewohara.toggles.storage.Storage
 import dev.andrewohara.toggles.storage.inMemory
 import dev.andrewohara.utils.jdk.toClock
@@ -22,8 +21,6 @@ interface InMemoryTogglesFactory: TogglesFactory {
         pageSize = pageSize,
         storage = Storage.inMemory(),
         random = random,
-        apiKeys = ApiKeys {
-            TODO()
-        }
+        crypt = Crypt(random.nextBytes(16))
     )
 }

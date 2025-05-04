@@ -7,9 +7,7 @@ data class Project(
     val createdOn: Instant,
     val updatedOn: Instant,
     val environments: List<EnvironmentName>
-): Comparable<Project> {
-    override fun compareTo(other: Project) = projectName.compareTo(other.projectName)
-}
+)
 
 data class ProjectCreateData(
     val projectName: ProjectName,

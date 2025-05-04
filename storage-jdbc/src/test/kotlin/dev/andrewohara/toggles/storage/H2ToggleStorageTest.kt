@@ -1,5 +1,6 @@
 package dev.andrewohara.toggles.storage
 
+import dev.andrewohara.toggles.ApiKeysStorageContract
 import dev.andrewohara.toggles.ProjectStorageContract
 import dev.andrewohara.toggles.ToggleStorageContract
 import org.h2.jdbcx.JdbcDataSource
@@ -14,5 +15,9 @@ class H2ToggleStorageTest: ToggleStorageContract() {
 }
 
 class H2ProjectStorageTest: ProjectStorageContract() {
+    override fun createStorage() = create()
+}
+
+class H2ApiKeyStorageTest: ApiKeysStorageContract() {
     override fun createStorage() = create()
 }

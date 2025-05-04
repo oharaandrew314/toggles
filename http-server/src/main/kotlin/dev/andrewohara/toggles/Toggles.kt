@@ -1,6 +1,5 @@
 package dev.andrewohara.toggles
 
-import dev.andrewohara.toggles.apikeys.ApiKeys
 import dev.andrewohara.toggles.storage.Storage
 import dev.andrewohara.toggles.storage.getProjectOrFail
 import dev.andrewohara.toggles.storage.getToggleOrFail
@@ -17,7 +16,7 @@ class Toggles(
     val pageSize: Int = 100,
     val clock: Clock = Clock.systemUTC(),
     val random: Random = Random.Default,
-    val apiKeys: ApiKeys
+    val crypt: Crypt // TODO make tenant specific
 )
 
 // Projects
@@ -38,6 +37,7 @@ fun Toggles.updateProject(projectName: ProjectName, data: ProjectUpdateData) = s
 fun Toggles.listProjects(cursor: ProjectName?) =
     storage.projects.list(pageSize)[cursor]
 
+// TODO ensure cannot delete project if api keys still exist
 fun Toggles.deleteProject(projectName: ProjectName) = storage
     .projects.getProjectOrFail(projectName)
     .failIf({storage.toggles.list(projectName, pageSize).any()}, {ProjectNotEmpty(projectName)})
@@ -69,3 +69,8 @@ fun Toggles.deleteToggle(projectName: ProjectName, toggleName: ToggleName) = sto
     .projects.getProjectOrFail(projectName)
     .flatMap { storage.toggles.getToggleOrFail(projectName, toggleName) }
     .peek { storage.toggles.remove(projectName, toggleName) }
+
+// API Keys
+
+// TODO can only create key for environment in project
+

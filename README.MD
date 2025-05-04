@@ -10,13 +10,17 @@ Feature Flags Server and Kotlin Library
 - JDBC (agnostic, but tested with following)
   - H2
   - MySql
+  - MariaDB
   - Postgres
 
 ## TODO
-- environments
 - tenant mode
+  - tenants are billed individually
+  - can't remove last admin of tenant
 - client keys (kms, database)
 - user login (google, microsoft, github)
-  - Users should be able to make their own tenant, and also be invited to others (ie users can have multiple tenants)
+  - Users should be able to make tenants, and also be invited to others (ie users can have multiple tenants)
 - user roles (admin, operator, tester)
 - file storage
+- readme should include bucketing spec
+- readme should include required flyway drivers

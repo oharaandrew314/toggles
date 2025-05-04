@@ -27,3 +27,14 @@ CREATE TABLE toggle_environments(
     PRIMARY KEY (project_name, toggle_name, environment),
     FOREIGN KEY (project_name, toggle_name) REFERENCES toggles(project_name, toggle_name) ON DELETE CASCADE
 );
+
+CREATE TABLE api_keys(
+    project_name VARCHAR(32) NOT NULL REFERENCES projects(project_name) ON DELETE CASCADE,
+    environment_name VARCHAR(32) NOT NULL,
+    created_on TIMESTAMP NOT NULL,
+    token_md5_hex CHAR(32) NOT NULL,
+
+    PRIMARY KEY (project_name, environment_name)
+);
+
+CREATE INDEX lookup ON api_keys(token_md5_hex);

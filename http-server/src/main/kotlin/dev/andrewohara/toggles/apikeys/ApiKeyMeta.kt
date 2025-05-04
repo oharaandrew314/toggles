@@ -2,8 +2,10 @@ package dev.andrewohara.toggles.apikeys
 
 import dev.andrewohara.toggles.EnvironmentName
 import dev.andrewohara.toggles.ProjectName
+import java.time.Instant
 
-data class ClientPrincipal(
+data class ApiKeyMeta(
     val projectName: ProjectName,
-    val environment: EnvironmentName
+    val environment: EnvironmentName,
+    val createdOn: Instant
 )

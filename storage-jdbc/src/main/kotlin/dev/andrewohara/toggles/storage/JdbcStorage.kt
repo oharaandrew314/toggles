@@ -18,6 +18,7 @@ fun Storage.Companion.jdbc(
 
     return Storage(
         projects = jdbcProjectStorage(dataSource),
-        toggles = jdbcToggleStorage(dataSource)
+        toggles = jdbcToggleStorage(dataSource),
+        apiKeys = jdbcApiKeyStorage(dataSource)
     )
 }

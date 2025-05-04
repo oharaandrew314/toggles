@@ -2,12 +2,13 @@ package dev.andrewohara.toggles.http.server
 
 import dev.andrewohara.toggles.ApiKey
 import dev.andrewohara.toggles.Toggles
-import dev.andrewohara.toggles.apikeys.ClientPrincipal
+import dev.andrewohara.toggles.apikeys.ApiKeyMeta
 import dev.andrewohara.toggles.createProject
 import dev.andrewohara.toggles.createToggle
 import dev.andrewohara.toggles.deleteProject
 import dev.andrewohara.toggles.deleteToggle
 import dev.andrewohara.toggles.getToggle
+import dev.andrewohara.toggles.hash
 import dev.andrewohara.toggles.http.ProjectCreateDataDto
 import dev.andrewohara.toggles.http.ProjectDto
 import dev.andrewohara.toggles.http.ProjectUpdateDataDto
@@ -47,11 +48,13 @@ import org.http4k.lens.RequestKey
 import org.http4k.routing.routes
 import org.http4k.security.BearerAuthSecurity
 
-val clientAuthLens = RequestKey.required<ClientPrincipal>("client_auth")
+val clientAuthLens = RequestKey.required<ApiKeyMeta>("client_auth")
 
 fun Toggles.toHttpServer(): HttpHandler {
     val clientSecurity = BearerAuthSecurity(clientAuthLens, lookup = { token ->
-        ApiKey.parseOrNull(token)?.let(apiKeys::exchange)
+        ApiKey.parseOrNull(token)
+            ?.let(crypt::hash)
+            ?.let(storage.apiKeys::get)
     })
 
     val api = contract {
