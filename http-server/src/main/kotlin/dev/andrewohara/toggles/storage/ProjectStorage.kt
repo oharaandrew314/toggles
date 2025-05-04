@@ -13,5 +13,5 @@ interface ProjectStorage {
     operator fun minusAssign(projectName: ProjectName)
 }
 
-fun ProjectStorage.getProjectOrFail(projectName: ProjectName) =
+fun ProjectStorage.getOrFail(projectName: ProjectName) =
     get(projectName).asResultOr { ProjectNotFound(projectName) }

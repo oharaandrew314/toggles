@@ -13,6 +13,6 @@ interface ToggleStorage {
     fun remove(projectName: ProjectName, toggleName: ToggleName)
 }
 
-fun ToggleStorage.getToggleOrFail(projectName: ProjectName, toggleName: ToggleName) =
+fun ToggleStorage.getOrFail(projectName: ProjectName, toggleName: ToggleName) =
     get(projectName, toggleName).asResultOr { ToggleNotFound(projectName, toggleName) }
 

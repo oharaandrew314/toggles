@@ -8,7 +8,6 @@ import dev.andrewohara.toggles.createToggle
 import dev.andrewohara.toggles.deleteProject
 import dev.andrewohara.toggles.deleteToggle
 import dev.andrewohara.toggles.getToggle
-import dev.andrewohara.toggles.hash
 import dev.andrewohara.toggles.http.ProjectCreateDataDto
 import dev.andrewohara.toggles.http.ProjectDto
 import dev.andrewohara.toggles.http.ProjectUpdateDataDto
@@ -53,7 +52,7 @@ val clientAuthLens = RequestKey.required<ApiKeyMeta>("client_auth")
 fun Toggles.toHttpServer(): HttpHandler {
     val clientSecurity = BearerAuthSecurity(clientAuthLens, lookup = { token ->
         ApiKey.parseOrNull(token)
-            ?.let(crypt::hash)
+            ?.let { hash(it) }
             ?.let(storage.apiKeys::get)
     })
 

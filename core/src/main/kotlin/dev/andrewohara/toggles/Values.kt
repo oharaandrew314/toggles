@@ -13,6 +13,7 @@ import dev.forkhandles.values.maxLength
 import dev.forkhandles.values.minLength
 import dev.forkhandles.values.minValue
 import dev.forkhandles.values.regex
+import kotlin.random.Random
 
 private val tokenValidator = "[a-zA-Z0-9-_]+".regex
 
@@ -50,7 +51,10 @@ class EnvironmentName private constructor(value: String): StringValue(value), Co
 }
 
 class ApiKey private constructor(value: String): StringValue(value, Maskers.hidden()) {
-    companion object: Base64StringValueFactory<ApiKey>(::ApiKey, validation = 16.exactLength)
+    companion object: Base64StringValueFactory<ApiKey>(::ApiKey, validation = 16.exactLength) {
+        private val chars = ('a'..'z') + ('A'..'Z') + ('0'..'9')
+        fun random(random: Random) = of(List(16) { chars.random(random) }.joinToString(""))
+    }
 }
 
 class UniqueId private constructor(value: String): StringValue(value) {

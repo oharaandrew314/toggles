@@ -34,7 +34,7 @@ abstract class ServerContractBase(val pageSize: Int = 2): StorageContractBase() 
             random = random,
             pageSize = pageSize,
             clock = clock,
-            crypt = Crypt(random.nextBytes(16))
+            secretKey = random.nextBytes(16)
         )
         httpServer = toggles.toHttpServer()
         httpClient = TogglesHttpClient(Uri.Companion.of(""), httpServer)

@@ -9,6 +9,10 @@ import dev.andrewohara.toggles.storage.inMemory
 import dev.andrewohara.utils.pagination.Page
 import dev.forkhandles.result4k.kotest.shouldBeFailure
 import dev.forkhandles.result4k.kotest.shouldBeSuccess
+import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
+import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.matchers.nulls.shouldBeNull
+import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
@@ -41,14 +45,16 @@ abstract class ProjectsHttpContract: ServerContractBase() {
         val project2 = toggles.createProject(ProjectCreateData(projectName2, devAndProd)).shouldBeSuccess()
         val project3 = toggles.createProject(ProjectCreateData(projectName3, devAndProd)).shouldBeSuccess()
 
-        httpClient.listProjects(null) shouldBeSuccess ProjectsPageDto(
-            items = listOf(project1.toDto(), project2.toDto()),
-            next = project2.projectName
-        )
+        val page1 = httpClient.listProjects(null).shouldBeSuccess()
+        page1.items.shouldHaveSize(2)
+        page1.next.shouldNotBeNull()
 
-        httpClient.listProjects(project2.projectName) shouldBeSuccess ProjectsPageDto(
-            items = listOf(project3.toDto()),
-            next = null
+        val page2 = httpClient.listProjects(page1.next).shouldBeSuccess()
+        page2.items.shouldHaveSize(1)
+        page2.next.shouldBeNull()
+
+        page1.items.plus(page2.items).shouldContainExactlyInAnyOrder(
+            project1.toDto(), project2.toDto(), project3.toDto()
         )
     }
 
@@ -73,9 +79,19 @@ abstract class ProjectsHttpContract: ServerContractBase() {
     }
 
     @Test
-    fun `delete project - not empty`() {
+    fun `delete project - still has toggles`() {
         toggles.createProject(ProjectCreateData(projectName1, devAndProd)).shouldBeSuccess()
         toggles.createToggle(projectName1, oldNewData.toCreate(toggleName1)).shouldBeSuccess()
+
+        httpClient.deleteProject(projectName1) shouldBeFailure TogglesErrorDto(
+            message = "Project not empty: $projectName1"
+        )
+    }
+
+    @Test
+    fun `delete project - still has api keys`() {
+        toggles.createProject(ProjectCreateData(projectName1, devAndProd)).shouldBeSuccess()
+        toggles.generateApiKey(projectName1, dev).shouldBeSuccess()
 
         httpClient.deleteProject(projectName1) shouldBeFailure TogglesErrorDto(
             message = "Project not empty: $projectName1"

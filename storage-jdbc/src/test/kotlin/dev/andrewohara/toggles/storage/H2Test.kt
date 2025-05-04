@@ -4,6 +4,7 @@ import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import dev.andrewohara.toggles.ApiKeysStorageContract
 import dev.andrewohara.toggles.ProjectStorageContract
+import dev.andrewohara.toggles.ProjectsHttpContract
 import dev.andrewohara.toggles.ToggleStorageContract
 import dev.andrewohara.toggles.TogglesHttpContract
 import java.util.UUID
@@ -26,5 +27,9 @@ class H2ApiKeyStorageTest: ApiKeysStorageContract() {
 }
 
 class H2TogglesHttpTest: TogglesHttpContract() {
+    override fun createStorage() = create()
+}
+
+class H2ProjectsHttpTest: ProjectsHttpContract() {
     override fun createStorage() = create()
 }
