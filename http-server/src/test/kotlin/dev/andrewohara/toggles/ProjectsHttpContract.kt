@@ -1,6 +1,6 @@
 package dev.andrewohara.toggles
 
-import dev.andrewohara.toggles.http.ProjectDataDto
+import dev.andrewohara.toggles.http.ProjectCreateDataDto
 import dev.andrewohara.toggles.http.ProjectsPageDto
 import dev.andrewohara.toggles.http.TogglesErrorDto
 import dev.andrewohara.toggles.http.server.toDto
@@ -10,13 +10,13 @@ import dev.forkhandles.result4k.kotest.shouldBeSuccess
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
-abstract class ProjectsHttpContract: ContractBase() {
+abstract class ProjectsHttpContract: ServerContractBase() {
 
     @Test
     fun `create project - success`() {
-        val expected = Project(projectName1, time)
+        val expected = Project(projectName1, time, time, devAndProd)
 
-        toggles.createProject(ProjectData(projectName1)) shouldBeSuccess expected
+        toggles.createProject(ProjectCreateData(projectName1, devAndProd)) shouldBeSuccess expected
 
         httpClient.listProjects(null) shouldBeSuccess ProjectsPageDto(
             items = listOf(expected.toDto()),
@@ -26,18 +26,18 @@ abstract class ProjectsHttpContract: ContractBase() {
     
     @Test
     fun `create project - already exists`() {
-        toggles.createProject(ProjectData(projectName1)).shouldBeSuccess()
+        toggles.createProject(ProjectCreateData(projectName1, devAndProd)).shouldBeSuccess()
 
-        httpClient.createProject(ProjectDataDto(projectName1)) shouldBeFailure TogglesErrorDto(
+        httpClient.createProject(ProjectCreateDataDto(projectName1, devAndProd)) shouldBeFailure TogglesErrorDto(
             message = "Project already exists: $projectName1"
         )
     }
 
     @Test
     fun `list projects`() {
-        val project1 = toggles.createProject(ProjectData(projectName1)).shouldBeSuccess()
-        val project2 = toggles.createProject(ProjectData(projectName2)).shouldBeSuccess()
-        val project3 = toggles.createProject(ProjectData(projectName3)).shouldBeSuccess()
+        val project1 = toggles.createProject(ProjectCreateData(projectName1, devAndProd)).shouldBeSuccess()
+        val project2 = toggles.createProject(ProjectCreateData(projectName2, devAndProd)).shouldBeSuccess()
+        val project3 = toggles.createProject(ProjectCreateData(projectName3, devAndProd)).shouldBeSuccess()
 
         httpClient.listProjects(null) shouldBeSuccess ProjectsPageDto(
             items = listOf(project1.toDto(), project2.toDto()),
@@ -59,8 +59,8 @@ abstract class ProjectsHttpContract: ContractBase() {
 
     @Test
     fun `delete project - success`() {
-        val project1 = toggles.createProject(ProjectData(projectName1)).shouldBeSuccess()
-        toggles.createToggle(projectName1, mostlyOld.toCreate(toggleName1)).shouldBeSuccess()
+        val project1 = toggles.createProject(ProjectCreateData(projectName1, devAndProd)).shouldBeSuccess()
+        toggles.createToggle(projectName1, oldNewData.toCreate(toggleName1)).shouldBeSuccess()
         toggles.deleteToggle(projectName1, toggleName1).shouldBeSuccess()
 
         httpClient.deleteProject(projectName1) shouldBeSuccess project1.toDto()
@@ -72,8 +72,8 @@ abstract class ProjectsHttpContract: ContractBase() {
 
     @Test
     fun `delete project - not empty`() {
-        toggles.createProject(ProjectData(projectName1)).shouldBeSuccess()
-        toggles.createToggle(projectName1, mostlyOld.toCreate(toggleName1)).shouldBeSuccess()
+        toggles.createProject(ProjectCreateData(projectName1, devAndProd)).shouldBeSuccess()
+        toggles.createToggle(projectName1, oldNewData.toCreate(toggleName1)).shouldBeSuccess()
 
         httpClient.deleteProject(projectName1) shouldBeFailure TogglesErrorDto(
             message = "Project not empty: $projectName1"
@@ -81,4 +81,4 @@ abstract class ProjectsHttpContract: ContractBase() {
     }
 }
 
-class InMemoryProjectsHttpTest: ProjectsHttpContract(), InMemoryTogglesSource
+class InMemoryProjectsHttpTest: ProjectsHttpContract(), InMemoryTogglesFactory

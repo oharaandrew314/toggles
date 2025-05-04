@@ -18,24 +18,10 @@ val user1 = SubjectId.of("user1")
 val user2 = SubjectId.of("user-second")
 val testUser = SubjectId.of("testuser")
 
-val mostlyOld = ToggleState(
-    variations = mapOf(
-        old to Weight.of(1),
-        new to Weight.of(2)
-    ),
-    defaultVariation = old,
-    overrides = mapOf(
-        testUser to new
-    )
-)
+val dev = EnvironmentName.of("dev")
+val staging = EnvironmentName.of("staging")
+val prod = EnvironmentName.of("prod")
+val devAndProd = listOf(dev, prod)
 
-val alwaysOn = ToggleState(
-    variations = mapOf(
-        off to Weight.of(0),
-        on to Weight.of(1)
-    ),
-    defaultVariation = off,
-    overrides = mapOf(
-        user2 to on
-    )
-)
+val uid1 = UniqueId.of("abcdefgh")
+val uid2 = UniqueId.of("bcdefghi")

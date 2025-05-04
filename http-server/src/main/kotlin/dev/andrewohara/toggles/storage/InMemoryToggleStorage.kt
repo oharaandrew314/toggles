@@ -48,7 +48,10 @@ fun ToggleStorage.Companion.inMemory() = object: ToggleStorage {
 
     override fun getProject(projectName: ProjectName) = projects.find { it.projectName == projectName }
 
-    override fun upsertProject(project: Project) = projects.plusAssign(project)
+    override fun upsertProject(project: Project) {
+        deleteProject(project.projectName)
+        projects += project
+    }
 
     override fun deleteProject(projectName: ProjectName) {
         projects.removeIf { it.projectName == projectName }

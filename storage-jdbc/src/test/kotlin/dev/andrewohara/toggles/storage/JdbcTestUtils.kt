@@ -27,8 +27,7 @@ fun JdbcDatabaseContainer<*>.toTogglesStorage(): ToggleStorage {
     }
 
     val dataSource = HikariDataSource(config).apply {
-        execute("TRUNCATE TABLE projects")
-        execute("TRUNCATE TABLE toggles")
+        execute("DELETE FROM toggles")
     }
 
     return ToggleStorage.jdbc(dataSource)

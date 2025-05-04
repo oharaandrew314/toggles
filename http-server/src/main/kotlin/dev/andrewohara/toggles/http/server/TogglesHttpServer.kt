@@ -1,40 +1,59 @@
 package dev.andrewohara.toggles.http.server
 
+import dev.andrewohara.toggles.ApiKey
 import dev.andrewohara.toggles.Toggles
+import dev.andrewohara.toggles.apikeys.ClientPrincipal
 import dev.andrewohara.toggles.createProject
 import dev.andrewohara.toggles.createToggle
 import dev.andrewohara.toggles.deleteProject
 import dev.andrewohara.toggles.deleteToggle
 import dev.andrewohara.toggles.getToggle
-import dev.andrewohara.toggles.http.ProjectDataDto
+import dev.andrewohara.toggles.http.ProjectCreateDataDto
 import dev.andrewohara.toggles.http.ProjectDto
+import dev.andrewohara.toggles.http.ProjectUpdateDataDto
 import dev.andrewohara.toggles.http.ProjectsPageDto
 import dev.andrewohara.toggles.http.ToggleCreateDataDto
 import dev.andrewohara.toggles.http.TogglesRoutes
 import dev.andrewohara.toggles.http.ToggleUpdateDataDto
 import dev.andrewohara.toggles.http.ToggleDto
+import dev.andrewohara.toggles.http.ToggleStateDto
 import dev.andrewohara.toggles.http.TogglesPageDto
 import dev.andrewohara.toggles.http.TogglesRoutes.projectCursorLens
 import dev.andrewohara.toggles.http.TogglesRoutes.toggleCursorLens
+import dev.andrewohara.toggles.http.TogglesRoutes.toggleNameLens
 import dev.andrewohara.toggles.listProjects
 import dev.andrewohara.toggles.listToggles
+import dev.andrewohara.toggles.toState
+import dev.andrewohara.toggles.updateProject
 import dev.andrewohara.toggles.updateToggle
 import dev.forkhandles.result4k.map
 import dev.forkhandles.result4k.recover
+import dev.forkhandles.values.parseOrNull
 import org.http4k.contract.contract
+import org.http4k.contract.div
+import org.http4k.contract.meta
 import org.http4k.contract.openapi.ApiInfo
 import org.http4k.contract.openapi.v3.OpenApi3
 import org.http4k.contract.openapi.v3.OpenApi3ApiRenderer
 import org.http4k.contract.ui.swaggerUiLite
 import org.http4k.core.HttpHandler
+import org.http4k.core.Method
 import org.http4k.core.Request
 import org.http4k.core.Response
 import org.http4k.core.Status
 import org.http4k.core.with
 import org.http4k.format.Moshi
+import org.http4k.lens.RequestKey
 import org.http4k.routing.routes
+import org.http4k.security.BearerAuthSecurity
+
+val clientAuthLens = RequestKey.required<ClientPrincipal>("client_auth")
 
 fun Toggles.toHttpServer(): HttpHandler {
+    val clientSecurity = BearerAuthSecurity(clientAuthLens, lookup = { token ->
+        ApiKey.parseOrNull(token)?.let(apiKeys::exchange)
+    })
+
     val api = contract {
         renderer = OpenApi3(
             ApiInfo("Toggles API", "1"),
@@ -49,10 +68,19 @@ fun Toggles.toHttpServer(): HttpHandler {
         }
 
         routes += TogglesRoutes.createProject to { request: Request ->
-            val data = ProjectDataDto.lens(request)
+            val data = ProjectCreateDataDto.lens(request)
             createProject(data.toModel())
                 .map { Response(Status.OK).with(ProjectDto.lens of it.toDto()) }
                 .recover { it.toResponse() }
+        }
+
+        routes += TogglesRoutes.updateProject to { projectName ->
+            { request ->
+                val data = ProjectUpdateDataDto.lens(request)
+                updateProject(projectName, data.toModel())
+                    .map { Response(Status.OK).with(ProjectDto.lens of it.toDto()) }
+                    .recover { it.toResponse() }
+            }
         }
 
         routes += TogglesRoutes.deleteProject to { projectName ->
@@ -102,6 +130,22 @@ fun Toggles.toHttpServer(): HttpHandler {
                 deleteToggle(projectName, toggleName)
                     .map { Response(Status.OK).with(ToggleDto.lens of it.toDto()) }
                     .recover { it.toResponse()}
+            }
+        }
+
+        routes += "/v1/toggles" / toggleNameLens meta {
+            operationId = "v1GetToggleState"
+            summary = "Get Toggle State"
+            security = clientSecurity
+
+            returning(Status.OK, ToggleStateDto.lens to ToggleStateDto.sample)
+        } bindContract Method.GET to { toggleName ->
+            { request ->
+                val principal = clientAuthLens(request)
+                getToggle(principal.projectName, toggleName)
+                    .map { it.toState(principal.environment) }
+                    .map { Response(Status.OK).with(ToggleStateDto.lens of it.toDto()) }
+                    .recover { it.toResponse() }
             }
         }
     }

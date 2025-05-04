@@ -19,15 +19,16 @@ abstract class ProjectStorageContract: StorageContractBase() {
     override fun setup() {
         super.setup()
 
-        project1 = Project(projectName1, t0)
+        project1 = Project(projectName1, t0, t0, devAndProd)
             .also(storage::upsertProject)
-        project2 = Project( projectName2, t0 + Duration.ofMinutes(1))
+        project2 = Project( projectName2, t0 + Duration.ofMinutes(1), t0 + Duration.ofMinutes(1), devAndProd)
             .also(storage::upsertProject)
-        project3 = Project( projectName3, t0 + Duration.ofMinutes(2))
+        project3 = Project( projectName3, t0 + Duration.ofMinutes(2), t0 + Duration.ofMinutes(2), devAndProd)
             .also(storage::upsertProject)
 
         storage.listProjects(100)
             .toList()
+            .shouldHaveSize(3)
             .shouldContainExactlyInAnyOrder(project1, project2, project3)
     }
 
@@ -69,8 +70,14 @@ abstract class ProjectStorageContract: StorageContractBase() {
     }
 
     @Test
-    fun `save - cannot update`() {
-        storage.upsertProject(project1.copy(createdOn = project1.createdOn.plusSeconds(30)))
-        storage.listProjects(100).toList().shouldContainExactlyInAnyOrder(project1, project2, project3)
+    fun `save - can update`() {
+        val updated = project1.copy(
+            createdOn = project1.createdOn.plusSeconds(30),
+            environments = listOf(dev, staging, prod)
+        )
+
+        storage.upsertProject(updated)
+
+        storage.listProjects(100).toList().shouldContainExactlyInAnyOrder(updated, project2, project3)
     }
 }

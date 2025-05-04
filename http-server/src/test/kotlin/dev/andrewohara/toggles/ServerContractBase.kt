@@ -10,7 +10,7 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.ZoneOffset
 
-abstract class ContractBase(val pageSize: Int = 2): TogglesSource {
+abstract class ServerContractBase(val pageSize: Int = 2): TogglesFactory {
 
     protected var time: Instant = Instant.parse("2025-04-24T12:00:00Z")
     protected val clock = object: Clock() {
