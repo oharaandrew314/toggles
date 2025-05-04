@@ -1,11 +1,14 @@
 package dev.andrewohara.toggles
 
+import dev.forkhandles.values.Base64StringValueFactory
 import dev.forkhandles.values.ComparableValue
 import dev.forkhandles.values.IntValue
 import dev.forkhandles.values.IntValueFactory
+import dev.forkhandles.values.Maskers
 import dev.forkhandles.values.StringValue
 import dev.forkhandles.values.StringValueFactory
 import dev.forkhandles.values.and
+import dev.forkhandles.values.exactLength
 import dev.forkhandles.values.maxLength
 import dev.forkhandles.values.minLength
 import dev.forkhandles.values.minValue
@@ -39,9 +42,19 @@ class Weight private constructor(value: Int): IntValue(value), ComparableValue<W
     companion object: IntValueFactory<Weight>(::Weight, 0.minValue)
 }
 
-class Environment(value: String): StringValue(value) {
-    companion object: StringValueFactory<Environment>(
-        fn =::Environment,
+class EnvironmentName private constructor(value: String): StringValue(value), ComparableValue<EnvironmentName, String> {
+    companion object: StringValueFactory<EnvironmentName>(
+        fn =::EnvironmentName,
         validation = 2.minLength.and(32.maxLength).and(tokenValidator)
     )
+}
+
+class ApiKey private constructor(value: String): StringValue(value, Maskers.hidden()) {
+    companion object: Base64StringValueFactory<ApiKey>(::ApiKey, validation = 16.exactLength)
+}
+
+class UniqueId private constructor(value: String): StringValue(value) {
+    companion object: Base64StringValueFactory<UniqueId>(::UniqueId, 8.exactLength) {
+        const val LENGTH = 8
+    }
 }
