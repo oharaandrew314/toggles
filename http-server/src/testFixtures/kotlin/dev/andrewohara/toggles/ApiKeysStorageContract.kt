@@ -1,7 +1,7 @@
 package dev.andrewohara.toggles
 
 import dev.andrewohara.toggles.apikeys.ApiKeyMeta
-import dev.andrewohara.toggles.apikeys.TokenMd5
+import dev.andrewohara.toggles.apikeys.TokenSha256
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
@@ -14,7 +14,7 @@ import org.junit.jupiter.api.Test
 import java.time.Duration
 import kotlin.random.Random
 
-private const val MD5_SIZE = 16
+private const val SHA_256_SIZE = 32
 
 abstract class ApiKeysStorageContract: StorageContractBase() {
 
@@ -23,16 +23,16 @@ abstract class ApiKeysStorageContract: StorageContractBase() {
     private lateinit var project1: Project
     private lateinit var project2: Project
 
-    private val project1DevKey = TokenMd5.of(random.nextBytes(MD5_SIZE))
+    private val project1DevKey = TokenSha256.of(random.nextBytes(SHA_256_SIZE))
     private lateinit var project1Dev: ApiKeyMeta
 
-    private val project2DevKey = TokenMd5.of(random.nextBytes(MD5_SIZE))
+    private val project2DevKey = TokenSha256.of(random.nextBytes(SHA_256_SIZE))
     private lateinit var project2Dev: ApiKeyMeta
 
-    private val project2StagingKey = TokenMd5.of(random.nextBytes(MD5_SIZE))
+    private val project2StagingKey = TokenSha256.of(random.nextBytes(SHA_256_SIZE))
     private lateinit var project2Staging: ApiKeyMeta
 
-    private val project2ProdKey = TokenMd5.of(random.nextBytes(MD5_SIZE))
+    private val project2ProdKey = TokenSha256.of(random.nextBytes(SHA_256_SIZE))
     private lateinit var project2Prod: ApiKeyMeta
 
     @BeforeEach
@@ -119,7 +119,7 @@ abstract class ApiKeysStorageContract: StorageContractBase() {
 
     @Test
     fun `exchange - not found`() {
-        storage.apiKeys[TokenMd5.of(random.nextBytes(MD5_SIZE))].shouldBeNull()
+        storage.apiKeys[TokenSha256.of(random.nextBytes(SHA_256_SIZE))].shouldBeNull()
     }
 
     @Test
@@ -129,7 +129,7 @@ abstract class ApiKeysStorageContract: StorageContractBase() {
 
     @Test
     fun `create new`() {
-        val newKey = TokenMd5.of(random.nextBytes(MD5_SIZE))
+        val newKey = TokenSha256.of(random.nextBytes(SHA_256_SIZE))
         val project1Prod = ApiKeyMeta(
             projectName = projectName1,
             environment = prod,
@@ -144,7 +144,7 @@ abstract class ApiKeysStorageContract: StorageContractBase() {
 
     @Test
     fun `update existing`() {
-        val newKey = TokenMd5.of(random.nextBytes(MD5_SIZE))
+        val newKey = TokenSha256.of(random.nextBytes(SHA_256_SIZE))
 
         storage.apiKeys[project1Dev] = newKey
 

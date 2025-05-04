@@ -3,7 +3,7 @@ package dev.andrewohara.toggles.storage
 import dev.andrewohara.toggles.EnvironmentName
 import dev.andrewohara.toggles.ProjectName
 import dev.andrewohara.toggles.apikeys.ApiKeyMeta
-import dev.andrewohara.toggles.apikeys.TokenMd5
+import dev.andrewohara.toggles.apikeys.TokenSha256
 import dev.andrewohara.utils.jdbc.toSequence
 import dev.andrewohara.utils.pagination.Page
 import dev.andrewohara.utils.pagination.Paginator
@@ -25,7 +25,7 @@ private const val GET = """
 """
 
 private const val INSERT = """
-    INSERT INTO api_keys (project_name, environment_name, created_on, token_md5_hex)
+    INSERT INTO api_keys (project_name, environment_name, created_on, token_sha256_hex)
     VALUES (?, ?, ?, ?)
 """
 
@@ -37,7 +37,7 @@ private const val DELETE = """
 private const val LOOKUP = """
     SELECT project_name, environment_name, created_on
     FROM api_keys 
-    WHERE token_md5_hex = ?
+    WHERE token_sha256_hex = ?
     LIMIT 1
 """
 
@@ -78,7 +78,7 @@ fun jdbcApiKeyStorage(dataSource: DataSource) = object: ApiKeyStorage {
         }
     }
 
-    override fun set(meta: ApiKeyMeta, tokenMd5: TokenMd5) {
+    override fun set(meta: ApiKeyMeta, tokenSha256: TokenSha256) {
         dataSource.transaction {
             prepareStatement(DELETE).use { stmt ->
                 stmt.setString(1, meta.projectName.value)
@@ -91,7 +91,7 @@ fun jdbcApiKeyStorage(dataSource: DataSource) = object: ApiKeyStorage {
                 stmt.setString(1, meta.projectName.value)
                 stmt.setString(2, meta.environment.value)
                 stmt.setTimestamp(3, java.sql.Timestamp.from(meta.createdOn))
-                stmt.setString(4, tokenMd5.toString())
+                stmt.setString(4, tokenSha256.toString())
 
                 stmt.executeUpdate()
             }
@@ -109,9 +109,9 @@ fun jdbcApiKeyStorage(dataSource: DataSource) = object: ApiKeyStorage {
         }
     }
 
-    override fun get(tokenMd5: TokenMd5) = dataSource.connection.use { conn ->
+    override fun get(tokenSha256: TokenSha256) = dataSource.connection.use { conn ->
         conn.prepareStatement(LOOKUP).use { stmt ->
-            stmt.setString(1, tokenMd5.toString())
+            stmt.setString(1, tokenSha256.toString())
 
             stmt.executeQuery().use { rs ->
                 if (rs.next()) rs.toModel() else null

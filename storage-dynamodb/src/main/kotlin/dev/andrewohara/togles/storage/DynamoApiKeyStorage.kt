@@ -3,7 +3,7 @@ package dev.andrewohara.togles.storage
 import dev.andrewohara.toggles.EnvironmentName
 import dev.andrewohara.toggles.ProjectName
 import dev.andrewohara.toggles.apikeys.ApiKeyMeta
-import dev.andrewohara.toggles.apikeys.TokenMd5
+import dev.andrewohara.toggles.apikeys.TokenSha256
 import dev.andrewohara.toggles.storage.ApiKeyStorage
 import dev.andrewohara.utils.pagination.Page
 import dev.andrewohara.utils.pagination.Paginator
@@ -41,19 +41,19 @@ fun dynamoApiKeyStorage(
     override fun get(projectName: ProjectName, environment: EnvironmentName) =
         table[projectName, environment]?.toModel()
 
-    override fun set(meta: ApiKeyMeta, tokenMd5: TokenMd5) = table.plusAssign(DynamoApiKey(
+    override fun set(meta: ApiKeyMeta, tokenSha256: TokenSha256) = table.plusAssign(DynamoApiKey(
         projectName = meta.projectName,
         environment = meta.environment,
         createdOn = meta.createdOn,
-        hash = tokenMd5.toString()
+        hash = tokenSha256.toString()
     ))
 
     override fun minusAssign(meta: ApiKeyMeta) =
         table.delete(meta.projectName, meta.environment)
 
-    override fun get(tokenMd5: TokenMd5) = table
+    override fun get(tokenSha256: TokenSha256) = table
         .index(DynamoApiKey.lookupIndex)
-        .query(tokenMd5.toString())
+        .query(tokenSha256.toString())
         .firstOrNull()
         ?.toModel()
 }

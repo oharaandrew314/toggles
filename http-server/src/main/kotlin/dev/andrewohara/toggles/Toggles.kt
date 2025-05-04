@@ -1,7 +1,7 @@
 package dev.andrewohara.toggles
 
 import dev.andrewohara.toggles.apikeys.ApiKeyMeta
-import dev.andrewohara.toggles.apikeys.TokenMd5
+import dev.andrewohara.toggles.apikeys.TokenSha256
 import dev.andrewohara.toggles.storage.Storage
 import dev.andrewohara.toggles.storage.getOrFail
 import dev.andrewohara.utils.result.failIf
@@ -20,10 +20,10 @@ class Toggles(
     val random: Random = Random.Default,
     private val secretKey: ByteArray
 ) {
-    fun Toggles.hash(apiKey: ApiKey) = MessageDigest.getInstance("MD5").run {
+    fun Toggles.hash(apiKey: ApiKey) = MessageDigest.getInstance("SHA-256").run {
         update(secretKey)
         val bytes = digest(apiKey.value.toByteArray())
-        TokenMd5.of(bytes)
+        TokenSha256.of(bytes)
     }
 }
 

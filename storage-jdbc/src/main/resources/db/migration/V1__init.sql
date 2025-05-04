@@ -32,9 +32,9 @@ CREATE TABLE api_keys(
     project_name VARCHAR(32) NOT NULL REFERENCES projects(project_name) ON DELETE CASCADE,
     environment_name VARCHAR(32) NOT NULL,
     created_on TIMESTAMP NOT NULL,
-    token_md5_hex CHAR(32) NOT NULL,
+    token_sha256_hex CHAR(64) NOT NULL,
 
     PRIMARY KEY (project_name, environment_name)
 );
 
-CREATE INDEX lookup ON api_keys(token_md5_hex);
+CREATE INDEX lookup ON api_keys(token_sha256_hex);

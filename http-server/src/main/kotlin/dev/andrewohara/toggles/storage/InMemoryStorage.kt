@@ -6,7 +6,7 @@ import dev.andrewohara.toggles.ProjectName
 import dev.andrewohara.toggles.Toggle
 import dev.andrewohara.toggles.ToggleName
 import dev.andrewohara.toggles.apikeys.ApiKeyMeta
-import dev.andrewohara.toggles.apikeys.TokenMd5
+import dev.andrewohara.toggles.apikeys.TokenSha256
 import dev.andrewohara.utils.pagination.Page
 import dev.andrewohara.utils.pagination.Paginator
 import java.util.concurrent.ConcurrentSkipListMap
@@ -74,7 +74,7 @@ internal fun inMemoryToggleStorage() = object: ToggleStorage {
 }
 
 internal fun apiKeyStorage() = object: ApiKeyStorage {
-    private val keys = ConcurrentSkipListMap<ApiKeyMeta, TokenMd5> { o1, o2 ->
+    private val keys = ConcurrentSkipListMap<ApiKeyMeta, TokenSha256> { o1, o2 ->
         "${o1.projectName}/${o1.environment}".compareTo("${o2.projectName}/${o2.environment}")
     }
 
@@ -96,13 +96,13 @@ internal fun apiKeyStorage() = object: ApiKeyStorage {
     override fun get(projectName: ProjectName, environment: EnvironmentName) =
         keys.keys.find { it.projectName == projectName && it.environment == environment }
 
-    override fun set(meta: ApiKeyMeta, tokenMd5: TokenMd5) {
-        keys[meta] = tokenMd5
+    override fun set(meta: ApiKeyMeta, tokenSha256: TokenSha256) {
+        keys[meta] = tokenSha256
     }
 
     override fun minusAssign(meta: ApiKeyMeta) = keys.minusAssign(meta)
 
-    override fun get(tokenMd5: TokenMd5) = keys.entries
-        .find { it.value == tokenMd5 }
+    override fun get(tokenSha256: TokenSha256) = keys.entries
+        .find { it.value == tokenSha256 }
         ?.key
 }
