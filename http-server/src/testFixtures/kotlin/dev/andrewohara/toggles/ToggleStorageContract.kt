@@ -22,23 +22,23 @@ abstract class ToggleStorageContract: StorageContractBase() {
     override fun setup() {
         super.setup()
 
-        storage.upsertProject(Project(projectName1, t0, t0, devAndProd))
-        storage.upsertProject(Project(projectName2, t0, t0, devAndProd))
+        storage.projects += Project(projectName1, t0, t0, devAndProd)
+        storage.projects += Project(projectName2, t0, t0, devAndProd)
 
         toggle1 = oldNewData
             .toCreate(toggleName1)
             .toToggle(projectName1, t0, random)
-            .also(storage::upsertToggle)
+            .also(storage.toggles::plusAssign)
 
         toggle2 = onOffData
             .toCreate(toggleName2)
             .toToggle(projectName1, t0.plusSeconds(60), random)
-            .also(storage::upsertToggle)
+            .also(storage.toggles::plusAssign)
 
         toggle3 = oldNewData
             .toCreate(toggleName3)
             .toToggle(projectName1, t0.plusSeconds(120), random)
-            .also(storage::upsertToggle)
+            .also(storage.toggles::plusAssign)
 
         toggle4 = ToggleUpdateData(
             variations = listOf(on, off),
@@ -47,12 +47,12 @@ abstract class ToggleStorageContract: StorageContractBase() {
         )
             .toCreate(toggleName1)
             .toToggle(projectName2, t0, random)
-            .also(storage::upsertToggle)
+            .also(storage.toggles::plusAssign)
     }
 
     @Test
     fun `list toggles - all`() {
-        storage.listToggles(projectName1, pageSize = 2)
+        storage.toggles.list(projectName1, pageSize = 2)
             .toList()
             .shouldContainExactlyInAnyOrder(toggle1, toggle2, toggle3)
 
@@ -60,11 +60,11 @@ abstract class ToggleStorageContract: StorageContractBase() {
 
     @Test
     fun `list toggles - paged`() {
-        val page1 = storage.listToggles(projectName1, pageSize = 2)[null]
+        val page1 = storage.toggles.list(projectName1, pageSize = 2)[null]
         page1.items.shouldHaveSize(2)
         page1.next.shouldNotBeNull()
 
-        val page2 = storage.listToggles(projectName1, pageSize = 2)[page1.next]
+        val page2 = storage.toggles.list(projectName1, pageSize = 2)[page1.next]
         page2.items.shouldHaveSize(1)
         page2.next.shouldBeNull()
 
@@ -73,31 +73,31 @@ abstract class ToggleStorageContract: StorageContractBase() {
 
     @Test
     fun `get toggle - found`() {
-        storage.getToggle(projectName1, toggleName1) shouldBe toggle1
+        storage.toggles[projectName1, toggleName1] shouldBe toggle1
     }
 
     @Test
     fun `get toggle - empty environments`() {
-        storage.getToggle(projectName2, toggleName1) shouldBe toggle4
+        storage.toggles[projectName2, toggleName1] shouldBe toggle4
     }
 
     @Test
     fun `get toggle - not found`() {
-        storage.getToggle(projectName2, toggleName2).shouldBeNull()
+        storage.toggles[projectName2, toggleName2].shouldBeNull()
     }
 
     @Test
     fun `delete toggle - found`() {
-        storage.deleteToggle(projectName1, toggleName1)
+        storage.toggles.remove(projectName1, toggleName1)
 
-        storage.listToggles(projectName1, 100)
+        storage.toggles.list(projectName1, 100)
             .toList()
             .shouldContainExactlyInAnyOrder(toggle2, toggle3)
     }
 
     @Test
     fun `delete toggle - not found`() {
-        storage.deleteToggle(projectName2, toggleName2)
+        storage.toggles.remove(projectName2, toggleName2)
     }
 
     @Test
@@ -106,7 +106,7 @@ abstract class ToggleStorageContract: StorageContractBase() {
             defaultVariation = new
         )
 
-        storage.upsertToggle(updated)
-        storage.getToggle(toggle1.projectName, toggle1.toggleName) shouldBe updated
+        storage.toggles += updated
+        storage.toggles[toggle1.projectName, toggle1.toggleName] shouldBe updated
     }
 }

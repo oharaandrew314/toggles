@@ -19,7 +19,7 @@ fun DataSource.execute(sql: String) {
     }
 }
 
-fun JdbcDatabaseContainer<*>.toTogglesStorage(): ToggleStorage {
+fun JdbcDatabaseContainer<*>.toStorage(): Storage {
     val config = HikariConfig().also {
         it.jdbcUrl = jdbcUrl
         it.username = username
@@ -30,5 +30,5 @@ fun JdbcDatabaseContainer<*>.toTogglesStorage(): ToggleStorage {
         execute("DELETE FROM toggles")
     }
 
-    return ToggleStorage.jdbc(dataSource)
+    return Storage.jdbc(dataSource)
 }

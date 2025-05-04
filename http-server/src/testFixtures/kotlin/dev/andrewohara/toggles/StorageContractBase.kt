@@ -1,6 +1,6 @@
 package dev.andrewohara.toggles
 
-import dev.andrewohara.toggles.storage.ToggleStorage
+import dev.andrewohara.toggles.storage.Storage
 import org.junit.jupiter.api.BeforeEach
 import java.time.Instant
 
@@ -8,8 +8,8 @@ abstract class StorageContractBase {
 
     protected val t0: Instant = Instant.parse("2025-04-29T12:00:00Z")
 
-    protected lateinit var storage: ToggleStorage
-    abstract fun createStorage(): ToggleStorage
+    protected lateinit var storage: Storage
+    abstract fun createStorage(): Storage
 
     @BeforeEach
     open fun setup() {

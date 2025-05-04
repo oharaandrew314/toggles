@@ -17,7 +17,7 @@ class PostgresProjectStorageTest: ProjectStorageContract() {
         @Container @JvmStatic val postgres = postgres()
     }
 
-    override fun createStorage() = postgres.toTogglesStorage()
+    override fun createStorage() = postgres.toStorage()
 }
 
 @Testcontainers
@@ -27,5 +27,5 @@ class PostgresToggleStorageTest: ToggleStorageContract() {
         @Container @JvmStatic val postgres = postgres()
     }
 
-    override fun createStorage() = postgres.toTogglesStorage()
+    override fun createStorage() = postgres.toStorage()
 }

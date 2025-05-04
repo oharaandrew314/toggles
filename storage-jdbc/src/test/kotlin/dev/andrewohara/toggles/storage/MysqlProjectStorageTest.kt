@@ -17,7 +17,7 @@ class MysqlTogglesStorageTest: ProjectStorageContract() {
         @Container @JvmStatic val mysql = mysql()
     }
 
-    override fun createStorage() = mysql.toTogglesStorage()
+    override fun createStorage() = mysql.toStorage()
 }
 
 @Testcontainers
@@ -27,5 +27,5 @@ class MysqlProjectStorageTest: ToggleStorageContract() {
         @Container @JvmStatic val mysql = mysql()
     }
 
-    override fun createStorage() = mysql.toTogglesStorage()
+    override fun createStorage() = mysql.toStorage()
 }

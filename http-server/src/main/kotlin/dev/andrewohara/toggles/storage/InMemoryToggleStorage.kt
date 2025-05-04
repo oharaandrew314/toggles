@@ -8,14 +8,37 @@ import dev.andrewohara.utils.pagination.Page
 import dev.andrewohara.utils.pagination.Paginator
 import java.util.concurrent.ConcurrentSkipListSet
 
-fun ToggleStorage.Companion.inMemory() = object: ToggleStorage {
+fun Storage.Companion.inMemory() = Storage(
+    projects = inMemoryProjectStorage(),
+    toggles = inMemoryToggleStorage()
+)
 
-    private val toggles = ConcurrentSkipListSet<Toggle>()
+internal fun inMemoryProjectStorage() = object: ProjectStorage {
     private val projects = ConcurrentSkipListSet<Project>()
 
-    // Toggles
+    override fun list(pageSize: Int) = Paginator<Project, ProjectName> { cursor ->
+        val results = projects.sorted().dropWhile { cursor != null && it.projectName <= cursor }
+        val page = results.take(pageSize)
+        Page(page, page.lastOrNull()?.projectName?.takeIf { page.size < results.size })
+    }
 
-    override fun listToggles(projectName: ProjectName, pageSize: Int) = Paginator<Toggle, ToggleName> { cursor ->
+    override fun get(projectName: ProjectName) = projects.find { it.projectName == projectName }
+
+    override fun plusAssign(project: Project) {
+        minusAssign(project.projectName)
+        projects += project
+    }
+
+    override fun minusAssign(projectName: ProjectName) {
+        projects.removeIf { it.projectName == projectName }
+    }
+}
+
+internal fun inMemoryToggleStorage() = object: ToggleStorage {
+
+    private val toggles = ConcurrentSkipListSet<Toggle>()
+
+    override fun list(projectName: ProjectName, pageSize: Int) = Paginator<Toggle, ToggleName> { cursor ->
         val results = toggles
             .filter { it.projectName == projectName }
             .sorted()
@@ -25,36 +48,16 @@ fun ToggleStorage.Companion.inMemory() = object: ToggleStorage {
         Page(page, page.lastOrNull()?.toggleName?.takeIf { page.size < results.size })
     }
 
-    override fun getToggle(projectName: ProjectName, toggleName: ToggleName): Toggle? {
+    override fun get(projectName: ProjectName, toggleName: ToggleName): Toggle? {
         return toggles.find { it.projectName == projectName && it.toggleName == toggleName }
     }
 
-    override fun upsertToggle(toggle: Toggle) {
-        deleteToggle(toggle.projectName, toggle.toggleName)
+    override fun plusAssign(toggle: Toggle) {
+        remove(toggle.projectName, toggle.toggleName)
         toggles += toggle
     }
 
-    override fun deleteToggle(projectName: ProjectName, toggleName: ToggleName) {
+    override fun remove(projectName: ProjectName, toggleName: ToggleName) {
         toggles.removeIf { it.projectName == projectName && it.toggleName == toggleName }
     }
-
-    // Projects
-
-    override fun listProjects(pageSize: Int) = Paginator<Project, ProjectName> { cursor ->
-        val results = projects.sorted().dropWhile { cursor != null && it.projectName <= cursor }
-        val page = results.take(pageSize)
-        Page(page, page.lastOrNull()?.projectName?.takeIf { page.size < results.size })
-    }
-
-    override fun getProject(projectName: ProjectName) = projects.find { it.projectName == projectName }
-
-    override fun upsertProject(project: Project) {
-        deleteProject(project.projectName)
-        projects += project
-    }
-
-    override fun deleteProject(projectName: ProjectName) {
-        projects.removeIf { it.projectName == projectName }
-    }
-
 }

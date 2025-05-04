@@ -1,7 +1,6 @@
 package dev.andrewohara.toggles.storage
 
 import dev.andrewohara.toggles.EnvironmentName
-import dev.andrewohara.toggles.Project
 import dev.andrewohara.toggles.ProjectName
 import dev.andrewohara.toggles.SubjectId
 import dev.andrewohara.toggles.Toggle
@@ -57,82 +56,8 @@ private const val INSERT_ENVIRONMENT = """
 
 private const val DELETE_TOGGLE = "DELETE FROM toggles WHERE project_name = ? AND toggle_name = ?"
 
-private const val LIST_PROJECTS = "SELECT * FROM projects WHERE project_name >= ? ORDER BY project_name ASC LIMIT ?"
-
-private const val GET_PROJECT = "SELECT * FROM projects WHERE project_name = ?"
-
-private const val INSERT_PROJECT = """
-    INSERT INTO projects (project_name, created_on, updated_on, environments)
-    VALUES (?, ?, ?, ?)
-"""
-
-private const val DELETE_PROJECT = "DELETE FROM projects WHERE project_name = ?"
-
-fun ToggleStorage.Companion.jdbc(dataSource: DataSource) = JdbcToggleStorage(dataSource)
-
-/**
- * Database agnostic JDBC storage.
- */
-class JdbcToggleStorage internal constructor(private val dataSource: DataSource): ToggleStorage {
-
-    override fun listProjects(pageSize: Int) = Paginator<Project, ProjectName> { cursor ->
-        val page = dataSource.connection.use { conn ->
-            conn.prepareStatement(LIST_PROJECTS).use { stmt ->
-                stmt.setString(1, cursor?.value ?: "")
-                stmt.setInt(2, pageSize + 1)
-
-                stmt.executeQuery().use { rs ->
-                    rs.toSequence().map { it.toProject() }.toList()
-                }
-            }
-        }
-
-        Page(
-            items = page.take(pageSize),
-            next = page.drop(pageSize).firstOrNull()?.projectName
-        )
-    }
-
-    override fun getProject(projectName: ProjectName) = dataSource.connection.use { conn ->
-        conn.prepareStatement(GET_PROJECT).use { stmt ->
-            stmt.setString(1, projectName.value)
-
-            stmt.executeQuery().use { rs ->
-                if (rs.next()) rs.toProject() else null
-            }
-        }
-    }
-
-    override fun upsertProject(project: Project) {
-        dataSource.transaction {
-            prepareStatement(DELETE_PROJECT).use { stmt ->
-                stmt.setString(1, project.projectName.value)
-
-                stmt.executeUpdate()
-            }
-
-            prepareStatement(INSERT_PROJECT).use { stmt ->
-                stmt.setString(1, project.projectName.value)
-                stmt.setTimestamp(2, Timestamp.from(project.createdOn))
-                stmt.setTimestamp(3, Timestamp.from(project.updatedOn))
-                stmt.setString(4, environmentsMapping(project.environments))
-
-                stmt.executeUpdate()
-            }
-        }
-    }
-
-    override fun deleteProject(projectName: ProjectName) {
-        dataSource.connection.use { conn ->
-            conn.prepareStatement(DELETE_PROJECT).use { stmt ->
-                stmt.setString(1, projectName.value)
-
-                stmt.executeUpdate()
-            }
-        }
-    }
-
-    override fun listToggles(
+internal fun jdbcToggleStorage(dataSource: DataSource) = object: ToggleStorage {
+    override fun list(
         projectName: ProjectName,
         pageSize: Int
     ) = Paginator<Toggle, ToggleName> { cursor ->
@@ -160,7 +85,7 @@ class JdbcToggleStorage internal constructor(private val dataSource: DataSource)
         )
     }
 
-    override fun getToggle(projectName: ProjectName, toggleName: ToggleName) = dataSource.connection.use { conn ->
+    override fun get(projectName: ProjectName, toggleName: ToggleName) = dataSource.connection.use { conn ->
         conn.prepareStatement(
             GET_TOGGLE,
             ResultSet.TYPE_SCROLL_INSENSITIVE,
@@ -175,7 +100,7 @@ class JdbcToggleStorage internal constructor(private val dataSource: DataSource)
         }
     }
 
-    override fun upsertToggle(toggle: Toggle) {
+    override fun plusAssign(toggle: Toggle) {
         dataSource.transaction {
             prepareStatement(DELETE_TOGGLE).use { stmt ->
                 stmt.setString(1, toggle.projectName.value)
@@ -210,7 +135,7 @@ class JdbcToggleStorage internal constructor(private val dataSource: DataSource)
         }
     }
 
-    override fun deleteToggle(projectName: ProjectName, toggleName: ToggleName) {
+    override fun remove(projectName: ProjectName, toggleName: ToggleName) {
         dataSource.connection.use { conn ->
             conn.prepareStatement(DELETE_TOGGLE).use { stmt ->
                 stmt.setString(1, projectName.value)
@@ -257,14 +182,6 @@ private fun ResultSet.toToggle(): Toggle {
     return toggle.copy(environments = environments)
 }
 
-private fun ResultSet.toProject() = Project(
-    projectName = ProjectName.parse(getString("project_name")),
-    createdOn = getTimestamp("created_on").toInstant(),
-    updatedOn = getTimestamp("updated_on").toInstant(),
-    environments = environmentsMapping(getString("environments"))
-)
-
-private val environmentsMapping = StringBiDiMappings.csv(mapElement = BiDiMapping(EnvironmentName::of, EnvironmentName::show))
 private val variationsMapping = StringBiDiMappings.csv(mapElement = BiDiMapping(VariationName::of, VariationName::show))
 private val weightsMapping = keyValuePairsMapping(VariationName.Companion, Weight.Companion)
 private val overridesMapping = keyValuePairsMapping(SubjectId.Companion, VariationName.Companion)

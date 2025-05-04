@@ -6,7 +6,7 @@ import dev.andrewohara.togles.storage.dynamoDb
 import org.http4k.connect.amazon.dynamodb.FakeDynamoDb
 import org.http4k.connect.amazon.dynamodb.model.TableName
 
-private fun create() = ToggleStorage.dynamoDb(
+private fun create() = Storage.dynamoDb(
     dynamoDb = FakeDynamoDb().client(),
     projectsTableName = TableName.of("projects"),
     togglesTableName = TableName.of("toggles"),

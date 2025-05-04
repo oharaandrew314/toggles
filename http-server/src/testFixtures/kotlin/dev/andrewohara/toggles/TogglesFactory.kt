@@ -1,7 +1,7 @@
 package dev.andrewohara.toggles
 
 import dev.andrewohara.toggles.apikeys.ApiKeys
-import dev.andrewohara.toggles.storage.ToggleStorage
+import dev.andrewohara.toggles.storage.Storage
 import dev.andrewohara.toggles.storage.inMemory
 import dev.andrewohara.utils.jdk.toClock
 import java.time.Clock
@@ -20,7 +20,7 @@ interface InMemoryTogglesFactory: TogglesFactory {
     override fun createToggles(clock: Clock, pageSize: Int, random: Random) = Toggles(
         clock = clock,
         pageSize = pageSize,
-        storage = ToggleStorage.inMemory(),
+        storage = Storage.inMemory(),
         random = random,
         apiKeys = ApiKeys {
             TODO()
