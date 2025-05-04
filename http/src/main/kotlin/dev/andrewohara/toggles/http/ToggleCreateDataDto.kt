@@ -1,17 +1,16 @@
 package dev.andrewohara.toggles.http
 
-import dev.andrewohara.toggles.SubjectId
+import dev.andrewohara.toggles.EnvironmentName
 import dev.andrewohara.toggles.ToggleName
 import dev.andrewohara.toggles.VariationName
-import dev.andrewohara.toggles.Weight
 import se.ansman.kotshi.JsonSerializable
 
 @JsonSerializable
 data class ToggleCreateDataDto(
     val toggleName: ToggleName,
-    val variations: Map<VariationName, Weight>,
-    val overrides: Map<SubjectId, VariationName>,
-    val defaultVariation: VariationName
+    val variations: List<VariationName>,
+    val defaultVariation: VariationName,
+    val environments: Map<EnvironmentName, ToggleEnvironmentDto>
 ) {
     companion object {
         val lens = togglesJson.autoBody<ToggleCreateDataDto>().toLens()
@@ -20,7 +19,7 @@ data class ToggleCreateDataDto(
             toggleName = ToggleName.of("my_toggle"),
             variations = ToggleUpdateDataDto.sample.variations,
             defaultVariation = ToggleUpdateDataDto.sample.defaultVariation,
-            overrides = ToggleUpdateDataDto.sample.overrides,
+            environments = ToggleUpdateDataDto.sample.environments
         )
     }
 }

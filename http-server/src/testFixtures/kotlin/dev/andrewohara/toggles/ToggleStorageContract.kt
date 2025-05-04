@@ -7,8 +7,11 @@ import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import kotlin.random.Random
 
 abstract class ToggleStorageContract: StorageContractBase() {
+
+    private val random = Random(1337)
 
     private lateinit var toggle1: Toggle
     private lateinit var toggle2: Toggle
@@ -19,25 +22,40 @@ abstract class ToggleStorageContract: StorageContractBase() {
     override fun setup() {
         super.setup()
 
-        toggle1 = mostlyOld
+        storage.upsertProject(Project(projectName1, t0, t0, devAndProd))
+        storage.upsertProject(Project(projectName2, t0, t0, devAndProd))
+
+        toggle1 = oldNewData
             .toCreate(toggleName1)
-            .toToggle(projectName1, t0)
+            .toToggle(projectName1, t0, random)
             .also(storage::upsertToggle)
 
-        toggle2 = alwaysOn
+        toggle2 = onOffData
             .toCreate(toggleName2)
-            .toToggle(projectName1, t0.plusSeconds(60))
+            .toToggle(projectName1, t0.plusSeconds(60), random)
             .also(storage::upsertToggle)
 
-        toggle3 = mostlyOld
+        toggle3 = oldNewData
             .toCreate(toggleName3)
-            .toToggle(projectName1, t0.plusSeconds(120))
+            .toToggle(projectName1, t0.plusSeconds(120), random)
             .also(storage::upsertToggle)
 
-        toggle4 = alwaysOn
+        toggle4 = ToggleUpdateData(
+            variations = listOf(on, off),
+            defaultVariation = off,
+            environments = emptyMap()
+        )
             .toCreate(toggleName1)
-            .toToggle(projectName2, t0)
+            .toToggle(projectName2, t0, random)
             .also(storage::upsertToggle)
+    }
+
+    @Test
+    fun `list toggles - all`() {
+        storage.listToggles(projectName1, pageSize = 2)
+            .toList()
+            .shouldContainExactlyInAnyOrder(toggle1, toggle2, toggle3)
+
     }
 
     @Test
@@ -55,6 +73,11 @@ abstract class ToggleStorageContract: StorageContractBase() {
 
     @Test
     fun `get toggle - found`() {
+        storage.getToggle(projectName1, toggleName1) shouldBe toggle1
+    }
+
+    @Test
+    fun `get toggle - empty environments`() {
         storage.getToggle(projectName2, toggleName1) shouldBe toggle4
     }
 

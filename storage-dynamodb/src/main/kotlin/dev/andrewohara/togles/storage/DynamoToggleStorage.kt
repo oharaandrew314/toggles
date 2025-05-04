@@ -98,11 +98,8 @@ class DynamoToggleStorage internal constructor(
     override fun getProject(projectName: ProjectName) = projects[projectName]?.toModel()
 
     override fun upsertProject(project: Project) {
-        if (getProject(project.projectName) != null) return
         projects.save(project.toDynamo())
     }
+
     override fun deleteProject(projectName: ProjectName) = projects.delete(projectName)
 }
-
-
-

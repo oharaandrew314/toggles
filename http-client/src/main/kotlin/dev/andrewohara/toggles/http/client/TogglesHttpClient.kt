@@ -1,12 +1,14 @@
 package dev.andrewohara.toggles.http.client
 
+import dev.andrewohara.toggles.ApiKey
 import dev.andrewohara.toggles.ProjectName
 import dev.andrewohara.toggles.ToggleName
-import dev.andrewohara.toggles.http.ProjectDataDto
+import dev.andrewohara.toggles.http.ProjectCreateDataDto
 import dev.andrewohara.toggles.http.ProjectDto
 import dev.andrewohara.toggles.http.ProjectsPageDto
 import dev.andrewohara.toggles.http.ToggleCreateDataDto
 import dev.andrewohara.toggles.http.ToggleDto
+import dev.andrewohara.toggles.http.ToggleStateDto
 import dev.andrewohara.toggles.http.ToggleUpdateDataDto
 import dev.andrewohara.toggles.http.TogglesRoutes
 import dev.andrewohara.toggles.http.TogglesErrorDto
@@ -16,12 +18,15 @@ import dev.forkhandles.result4k.asFailure
 import dev.forkhandles.result4k.asSuccess
 import org.http4k.client.JavaHttpClient
 import org.http4k.core.HttpHandler
+import org.http4k.core.Method
+import org.http4k.core.Request
 import org.http4k.core.Response
 import org.http4k.core.Status
 import org.http4k.core.Uri
 import org.http4k.core.with
 import org.http4k.lens.BodyLens
 import org.http4k.lens.LensFailure
+import org.http4k.lens.bearerAuth
 
 class TogglesHttpClient(
     private val host: Uri,
@@ -34,10 +39,10 @@ class TogglesHttpClient(
         .let(internet)
         .toResult(ProjectsPageDto.lens)
 
-    fun createProject(data: ProjectDataDto) = TogglesRoutes
+    fun createProject(data: ProjectCreateDataDto) = TogglesRoutes
         .createProject
         .newRequest(host)
-        .with(ProjectDataDto.lens of data)
+        .with(ProjectCreateDataDto.lens of data)
         .let(internet)
         .toResult(ProjectDto.lens)
 
@@ -88,6 +93,19 @@ class TogglesHttpClient(
         .with(TogglesRoutes.toggleNameLens of toggleName)
         .let(internet)
         .toResult(ToggleDto.lens)
+
+    fun getToggleState(apiKey: ApiKey, toggleName: ToggleName): Result4k<ToggleStateDto, TogglesErrorDto> {
+        val response = Request(Method.GET, host.path("/v1/toggles/$toggleName"))
+            .bearerAuth(apiKey.value)
+            .let(internet)
+
+        return when(response.status) {
+            Status.OK -> ToggleStateDto.lens(response).asSuccess()
+            Status.UNAUTHORIZED -> TogglesErrorDto("Unauthorized").asFailure()
+            Status.NOT_FOUND -> TogglesErrorDto("Toggle not found: $toggleName").asFailure()
+            else -> error(response)
+        }
+    }
 }
 
 private fun <Out: Any> Response.toResult(lens: BodyLens<Out>): Result4k<Out, TogglesErrorDto> = when(status) {

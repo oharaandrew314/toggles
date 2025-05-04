@@ -1,5 +1,6 @@
 package dev.andrewohara.toggles
 
+import dev.andrewohara.toggles.apikeys.ApiKeys
 import dev.andrewohara.toggles.storage.ToggleStorage
 import dev.andrewohara.toggles.storage.getProjectOrFail
 import dev.andrewohara.toggles.storage.getToggleOrFail
@@ -9,18 +10,29 @@ import dev.forkhandles.result4k.flatMap
 import dev.forkhandles.result4k.map
 import dev.forkhandles.result4k.peek
 import java.time.Clock
+import kotlin.random.Random
 
 class Toggles(
     val storage: ToggleStorage,
     val pageSize: Int = 100,
-    val clock: Clock = Clock.systemUTC()
+    val clock: Clock = Clock.systemUTC(),
+    val random: Random = Random.Default,
+    val apiKeys: ApiKeys
 )
 
 // Projects
 
-fun Toggles.createProject(data: ProjectData) = begin
+fun Toggles.createProject(data: ProjectCreateData) = begin
     .failIf({storage.getProject(data.projectName) != null}, { ProjectAlreadyExists(data.projectName)})
-    .map { Project(data.projectName, clock.instant()) }
+    .map {
+        val time = clock.instant()
+        Project(data.projectName, time, time, data.environments)
+    }
+    .peek(storage::upsertProject)
+
+fun Toggles.updateProject(projectName: ProjectName, data: ProjectUpdateData) = storage
+    .getProjectOrFail(projectName)
+    .map { it.copy(environments = data.environments, updatedOn = clock.instant()) }
     .peek(storage::upsertProject)
 
 fun Toggles.listProjects(cursor: ProjectName?) =
@@ -44,13 +56,13 @@ fun Toggles.getToggle(projectName: ProjectName, toggleName: ToggleName) = storag
 fun Toggles.createToggle(projectName: ProjectName, data: ToggleCreateData) = storage
     .getProjectOrFail(projectName)
     .failIf({ storage.getToggle(projectName, data.toggleName) != null}, { ToggleAlreadyExists(projectName, data.toggleName) })
-    .map { data.toToggle(projectName, clock.instant()) }
+    .map { data.toToggle(projectName, clock.instant(), random) }
     .peek(storage::upsertToggle)
 
-fun Toggles.updateToggle(projectName: ProjectName, toggleName: ToggleName, data: ToggleState) = storage
+fun Toggles.updateToggle(projectName: ProjectName, toggleName: ToggleName, data: ToggleUpdateData) = storage
     .getProjectOrFail(projectName)
     .flatMap { storage.getToggleOrFail(projectName, toggleName) }
-    .map { it.with(data, clock.instant()) }
+    .map { it.update(data, clock.instant()) }
     .peek(storage::upsertToggle)
 
 fun Toggles.deleteToggle(projectName: ProjectName, toggleName: ToggleName) = storage

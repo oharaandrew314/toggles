@@ -30,10 +30,21 @@ object TogglesRoutes {
         summary = "Create Project"
         tags += ProjectDto.tag
 
-        receiving(ProjectDataDto.lens to ProjectDataDto.sample)
+        receiving(ProjectCreateDataDto.lens to ProjectCreateDataDto.sample)
         returning(Status.OK, ProjectDto.lens to ProjectDto.sample)
         returning(Status.CONFLICT, TogglesErrorDto.lens to TogglesErrorDto.projectAlreadyExistsSample)
     } bindContract Method.POST
+
+    val updateProject = "/v1/projects" / projectNameLens meta {
+        operationId = "v1UpdateProject"
+        summary = "Update Project"
+        tags += ProjectDto.tag
+
+        receiving(ProjectUpdateDataDto.lens to ProjectUpdateDataDto.sample)
+        returning(Status.OK, ProjectDto.lens to ProjectDto.sample)
+        returning(Status.NOT_FOUND, TogglesErrorDto.lens to TogglesErrorDto.projectDoesNotExistSample)
+        returning(Status.CONFLICT, TogglesErrorDto.lens to TogglesErrorDto.projectAlreadyExistsSample)
+    } bindContract Method.PUT
 
     val deleteProject = "/v1/projects" / projectNameLens meta {
         operationId = "v1DeleteProject"

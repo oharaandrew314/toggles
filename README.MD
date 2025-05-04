@@ -4,8 +4,19 @@
 
 Feature Flags Server and Kotlin Library
 
+## Storage
+- Memory
+- DynamoDB
+- JDBC (agnostic, but tested with following)
+  - H2
+  - MySql
+  - Postgres
+
 ## TODO
+- environments
 - tenant mode
-- single tenant mode
-- engine api keys
-- users (admin, operator, tester)
+- client keys (kms, database)
+- user login (google, microsoft, github)
+  - Users should be able to make their own tenant, and also be invited to others (ie users can have multiple tenants)
+- user roles (admin, operator, tester)
+- file storage

@@ -14,11 +14,15 @@ data class TogglesErrorDto(
         val projectDoesNotExistSample = TogglesErrorDto(
             message = "project does not exist: my_project"
         )
+        val environmentInUseSample = TogglesErrorDto(
+            message = "environment in use: my_project/production"
+        )
+
         val toggleAlreadyExistsSample = TogglesErrorDto(
-            message = "toggle already exists: my_project.my_toggle"
+            message = "toggle already exists: my_project/my_toggle"
         )
         val toggleDoesNotExistSample = TogglesErrorDto(
-            message = "toggle does not exist: my_project.my_toggle"
+            message = "toggle does not exist: my_project/my_toggle"
         )
     }
 }
