@@ -8,7 +8,6 @@ import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
 
 private fun postgres(): JdbcDatabaseContainer<*> = PostgreSQLContainer<Nothing>("postgres:17.4")
-    .withInitScript("init.sql")
 
 @Testcontainers
 class PostgresProjectStorageTest: ProjectStorageContract() {

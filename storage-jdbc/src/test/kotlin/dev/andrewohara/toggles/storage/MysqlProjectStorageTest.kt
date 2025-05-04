@@ -8,7 +8,6 @@ import org.testcontainers.junit.jupiter.Testcontainers
 
 // 9.3.0 hangs for some reason
 private fun mysql(): MySQLContainer<*> = MySQLContainer("mysql:8.4.5")
-    .withInitScript("init.sql")
 
 @Testcontainers
 class MysqlTogglesStorageTest: ProjectStorageContract() {

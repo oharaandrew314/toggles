@@ -7,7 +7,6 @@ import java.util.UUID
 
 private fun create() = JdbcDataSource()
     .apply { setURL("jdbc:h2:mem:${UUID.randomUUID()};DB_CLOSE_DELAY=-1") }
-    .also { it.executeResource("init.sql") }
     .let { Storage.jdbc(it) }
 
 class H2ToggleStorageTest: ToggleStorageContract() {
