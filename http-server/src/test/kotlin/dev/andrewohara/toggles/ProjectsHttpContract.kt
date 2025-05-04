@@ -4,6 +4,8 @@ import dev.andrewohara.toggles.http.ProjectCreateDataDto
 import dev.andrewohara.toggles.http.ProjectsPageDto
 import dev.andrewohara.toggles.http.TogglesErrorDto
 import dev.andrewohara.toggles.http.server.toDto
+import dev.andrewohara.toggles.storage.Storage
+import dev.andrewohara.toggles.storage.inMemory
 import dev.andrewohara.utils.pagination.Page
 import dev.forkhandles.result4k.kotest.shouldBeFailure
 import dev.forkhandles.result4k.kotest.shouldBeSuccess
@@ -81,4 +83,6 @@ abstract class ProjectsHttpContract: ServerContractBase() {
     }
 }
 
-class InMemoryProjectsHttpTest: ProjectsHttpContract(), InMemoryTogglesFactory
+class InMemoryProjectsHttpTest: ProjectsHttpContract() {
+    override fun createStorage() = Storage.inMemory()
+}

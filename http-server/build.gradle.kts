@@ -5,9 +5,9 @@ dependencies {
     runtimeOnly("org.slf4j:slf4j-simple:_")
 
     testImplementation("dev.forkhandles:result4k-kotest")
-    testImplementation(project(":http-client"))
     testImplementation(testFixtures(project(":core")))
 
     testFixturesApi("dev.forkhandles:result4k-kotest")
     testFixturesApi(testFixtures(project(":core")))
+    testFixturesApi(project(":http-client"))
 }

@@ -6,7 +6,7 @@ import dev.andrewohara.togles.storage.dynamoDb
 import org.http4k.connect.amazon.dynamodb.FakeDynamoDb
 import org.http4k.connect.amazon.dynamodb.model.TableName
 
-private fun create() = Storage.dynamoDb(
+fun testDynamoStorage() = Storage.dynamoDb(
     dynamoDb = FakeDynamoDb().client(),
     projectsTableName = TableName.of("projects"),
     togglesTableName = TableName.of("toggles"),
@@ -15,13 +15,13 @@ private fun create() = Storage.dynamoDb(
 )
 
 class DynamoToggleStorageTest: ToggleStorageContract() {
-    override fun createStorage() = create()
+    override fun createStorage() = testDynamoStorage()
 }
 
 class DynamoProjectStorageTest: ProjectStorageContract() {
-    override fun createStorage() = create()
+    override fun createStorage() = testDynamoStorage()
 }
 
 class DynamoApiKeyStorageTest: ProjectStorageContract() {
-    override fun createStorage() = create()
+    override fun createStorage() = testDynamoStorage()
 }

@@ -9,8 +9,9 @@ import java.time.Clock
 import java.time.Instant
 import java.time.ZoneId
 import java.time.ZoneOffset
+import kotlin.random.Random
 
-abstract class ServerContractBase(val pageSize: Int = 2): TogglesFactory {
+abstract class ServerContractBase(val pageSize: Int = 2): StorageContractBase() {
 
     protected var time: Instant = Instant.parse("2025-04-24T12:00:00Z")
     protected val clock = object: Clock() {
@@ -24,8 +25,17 @@ abstract class ServerContractBase(val pageSize: Int = 2): TogglesFactory {
     protected lateinit var httpClient: TogglesHttpClient
 
     @BeforeEach
-    fun setup() {
-        toggles = createToggles(clock, pageSize)
+    override fun setup() {
+        super.setup()
+
+        val random = Random(1337)
+        toggles = Toggles(
+            storage = storage,
+            random = random,
+            pageSize = pageSize,
+            clock = clock,
+            crypt = Crypt(random.nextBytes(16))
+        )
         httpServer = toggles.toHttpServer()
         httpClient = TogglesHttpClient(Uri.Companion.of(""), httpServer)
     }

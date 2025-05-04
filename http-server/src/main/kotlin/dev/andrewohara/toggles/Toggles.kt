@@ -37,10 +37,10 @@ fun Toggles.updateProject(projectName: ProjectName, data: ProjectUpdateData) = s
 fun Toggles.listProjects(cursor: ProjectName?) =
     storage.projects.list(pageSize)[cursor]
 
-// TODO ensure cannot delete project if api keys still exist
 fun Toggles.deleteProject(projectName: ProjectName) = storage
     .projects.getProjectOrFail(projectName)
     .failIf({storage.toggles.list(projectName, pageSize).any()}, {ProjectNotEmpty(projectName)})
+    .failIf({storage.apiKeys.list(projectName, pageSize).any()}, {ProjectNotEmpty(projectName)})
     .peek { storage.projects.minusAssign(projectName) }
 
 // Toggles

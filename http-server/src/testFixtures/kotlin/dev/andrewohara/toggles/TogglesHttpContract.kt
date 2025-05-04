@@ -3,9 +3,15 @@ package dev.andrewohara.toggles
 import dev.andrewohara.toggles.http.TogglesErrorDto
 import dev.andrewohara.toggles.http.TogglesPageDto
 import dev.andrewohara.toggles.http.server.toDto
+import dev.andrewohara.toggles.storage.Storage
+import dev.andrewohara.toggles.storage.inMemory
 import dev.andrewohara.utils.pagination.Page
 import dev.forkhandles.result4k.kotest.shouldBeFailure
 import dev.forkhandles.result4k.kotest.shouldBeSuccess
+import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
+import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.matchers.nulls.shouldBeNull
+import io.kotest.matchers.nulls.shouldNotBeNull
 import org.junit.jupiter.api.Test
 import java.time.Duration
 
@@ -88,14 +94,16 @@ abstract class TogglesHttpContract: ServerContractBase() {
         val toggle3 = toggles.createToggle(projectName1, oldNewData.toCreate(toggleName3)).shouldBeSuccess()
         val toggle4 = toggles.createToggle(projectName2, oldNewData.toCreate(toggleName1)).shouldBeSuccess()
 
-        httpClient.listToggles(projectName1, null) shouldBeSuccess TogglesPageDto(
-            items = listOf(toggle1.toDto(), toggle2.toDto()),
-            next = toggle2.toggleName
-        )
+        val page1 = httpClient.listToggles(projectName1, null).shouldBeSuccess()
+        page1.items.shouldHaveSize(2)
+        page1.next.shouldNotBeNull()
 
-        httpClient.listToggles(projectName1, toggle2.toggleName) shouldBeSuccess TogglesPageDto(
-            items = listOf(toggle3.toDto()),
-            next = null
+        val page2 = httpClient.listToggles(projectName1, page1.next).shouldBeSuccess()
+        page2.items.shouldHaveSize(1)
+        page2.next.shouldBeNull()
+
+        page1.items.plus(page2.items).shouldContainExactlyInAnyOrder(
+            toggle1.toDto(), toggle2.toDto(), toggle3.toDto()
         )
 
         httpClient.listToggles(projectName2, null) shouldBeSuccess TogglesPageDto(
@@ -227,4 +235,6 @@ abstract class TogglesHttpContract: ServerContractBase() {
     }
 }
 
-class InMemoryTogglesHttpTest: TogglesHttpContract(), InMemoryTogglesFactory
+class InMemoryTogglesHttpTest: TogglesHttpContract() {
+    override fun createStorage() = Storage.inMemory()
+}

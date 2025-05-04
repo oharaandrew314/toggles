@@ -7,11 +7,10 @@ import org.testcontainers.containers.MariaDBContainer
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
 
-// 9.3.0 hangs for some reason
 private fun mariaDb(): MariaDBContainer<*> = MariaDBContainer("mariadb:11.7.2")
 
 @Testcontainers
-class MariDbTogglesStorageTest: ProjectStorageContract() {
+class MariaDbToggleStorageTest: ProjectStorageContract() {
 
     companion object {
         @Container @JvmStatic val mariaDb = mariaDb()
