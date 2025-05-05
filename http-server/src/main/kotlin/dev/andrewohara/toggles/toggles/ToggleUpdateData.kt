@@ -1,5 +1,7 @@
-package dev.andrewohara.toggles
+package dev.andrewohara.toggles.toggles
 
+import dev.andrewohara.toggles.EnvironmentName
+import dev.andrewohara.toggles.VariationName
 import java.time.Instant
 
 data class ToggleUpdateData(

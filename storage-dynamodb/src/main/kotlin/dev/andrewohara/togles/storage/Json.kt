@@ -6,6 +6,7 @@ import dev.andrewohara.toggles.ApiKey
 import dev.andrewohara.toggles.EnvironmentName
 import dev.andrewohara.toggles.ProjectName
 import dev.andrewohara.toggles.SubjectId
+import dev.andrewohara.toggles.TenantId
 import dev.andrewohara.toggles.ToggleName
 import dev.andrewohara.toggles.UniqueId
 import dev.andrewohara.toggles.VariationName
@@ -35,5 +36,7 @@ internal val togglesJson = Moshi.Builder()
     .value(EnvironmentName)
     .value(UniqueId)
     .value(ApiKey)
+    .value(TenantId)
+    .text(projectRefMapping)
     .done()
     .let { ConfigurableMoshi(it) }

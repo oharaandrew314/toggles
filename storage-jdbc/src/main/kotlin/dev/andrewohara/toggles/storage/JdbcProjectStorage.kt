@@ -1,8 +1,10 @@
 package dev.andrewohara.toggles.storage
 
 import dev.andrewohara.toggles.EnvironmentName
-import dev.andrewohara.toggles.Project
+import dev.andrewohara.toggles.projects.Project
 import dev.andrewohara.toggles.ProjectName
+import dev.andrewohara.toggles.TenantId
+import dev.andrewohara.toggles.projects.ProjectStorage
 import dev.andrewohara.utils.jdbc.toSequence
 import dev.andrewohara.utils.pagination.Page
 import dev.andrewohara.utils.pagination.Paginator
@@ -12,13 +14,22 @@ import java.sql.ResultSet
 import java.sql.Timestamp
 import javax.sql.DataSource
 
-private const val LIST_PROJECTS = "SELECT * FROM projects WHERE project_name >= ? ORDER BY project_name ASC LIMIT ?"
+private const val LIST_PROJECTS = """
+    SELECT *
+    FROM projects
+    WHERE tenant_id = ? AND project_name >= ?
+    ORDER BY project_name ASC LIMIT ?
+"""
 
-private const val GET_PROJECT = "SELECT * FROM projects WHERE project_name = ?"
+private const val GET_PROJECT = """
+    SELECT *
+    FROM projects
+    WHERE tenant_id = ? AND project_name = ?
+"""
 
 private const val INSERT_PROJECT = """
-    INSERT INTO projects (project_name, created_on, updated_on, environments)
-    VALUES (?, ?, ?, ?)
+    INSERT INTO projects (tenant_id, project_name, created_on, updated_on, environments)
+    VALUES (?, ?, ?, ?, ?)
 """
 
 private const val DELETE_PROJECT = "DELETE FROM projects WHERE project_name = ?"
@@ -26,11 +37,12 @@ private const val DELETE_PROJECT = "DELETE FROM projects WHERE project_name = ?"
 
 internal fun jdbcProjectStorage(dataSource: DataSource) = object: ProjectStorage {
 
-    override fun list(pageSize: Int) = Paginator<Project, ProjectName> { cursor ->
+    override fun list(tenantId: TenantId, pageSize: Int) = Paginator<Project, ProjectName> { cursor ->
         val page = dataSource.connection.use { conn ->
             conn.prepareStatement(LIST_PROJECTS).use { stmt ->
-                stmt.setString(1, cursor?.value ?: "")
-                stmt.setInt(2, pageSize + 1)
+                stmt.setString(1, tenantId.value)
+                stmt.setString(2, cursor?.value ?: "")
+                stmt.setInt(3, pageSize + 1)
 
                 stmt.executeQuery().use { rs ->
                     rs.toSequence().map { it.toProject() }.toList()
@@ -44,9 +56,10 @@ internal fun jdbcProjectStorage(dataSource: DataSource) = object: ProjectStorage
         )
     }
 
-    override fun get(projectName: ProjectName) = dataSource.connection.use { conn ->
+    override fun get(tenantId: TenantId, projectName: ProjectName) = dataSource.connection.use { conn ->
         conn.prepareStatement(GET_PROJECT).use { stmt ->
-            stmt.setString(1, projectName.value)
+            stmt.setString(1, tenantId.value)
+            stmt.setString(2, projectName.value)
 
             stmt.executeQuery().use { rs ->
                 if (rs.next()) rs.toProject() else null
@@ -73,10 +86,11 @@ internal fun jdbcProjectStorage(dataSource: DataSource) = object: ProjectStorage
         }
     }
 
-    override fun minusAssign(projectName: ProjectName) {
+    override fun minusAssign(project: Project) {
         dataSource.connection.use { conn ->
             conn.prepareStatement(DELETE_PROJECT).use { stmt ->
-                stmt.setString(1, projectName.value)
+                stmt.setString(1, project.tenantId.value)
+                stmt.setString(2, project.projectName.value)
 
                 stmt.executeUpdate()
             }
@@ -87,6 +101,7 @@ internal fun jdbcProjectStorage(dataSource: DataSource) = object: ProjectStorage
 private val environmentsMapping = StringBiDiMappings.csv(mapElement = BiDiMapping(EnvironmentName::of, EnvironmentName::show))
 
 private fun ResultSet.toProject() = Project(
+    tenantId = TenantId.parse(getString("tenant_id")),
     projectName = ProjectName.parse(getString("project_name")),
     createdOn = getTimestamp("created_on").toInstant(),
     updatedOn = getTimestamp("updated_on").toInstant(),

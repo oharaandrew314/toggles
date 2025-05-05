@@ -1,7 +1,11 @@
-package dev.andrewohara.toggles
+package dev.andrewohara.toggles.toggles
 
+import dev.andrewohara.toggles.EnvironmentName
+import dev.andrewohara.toggles.ProjectName
+import dev.andrewohara.toggles.TenantId
+import dev.andrewohara.toggles.ToggleName
+import dev.andrewohara.toggles.VariationName
 import java.time.Instant
-import kotlin.random.Random
 
 data class ToggleCreateData(
     val toggleName: ToggleName,
@@ -11,13 +15,13 @@ data class ToggleCreateData(
 )
 
 fun ToggleCreateData.toToggle(
+    tenantId: TenantId,
     projectName: ProjectName,
-    time: Instant,
-    random: Random
+    time: Instant
 ) = Toggle(
+    tenantId = tenantId,
     projectName = projectName,
     toggleName = toggleName,
-    uniqueId = UniqueId.random(random),
     createdOn = time,
     updatedOn = time,
     variations = variations,

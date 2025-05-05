@@ -17,10 +17,10 @@ Feature Flags Server and Kotlin Library
 - tenant mode
   - tenants are billed individually
   - can't remove last admin of tenant
-- client keys (kms, database)
 - user login (google, microsoft, github)
   - Users should be able to make tenants, and also be invited to others (ie users can have multiple tenants)
 - user roles (admin, operator, tester)
 - file storage
 - readme should include bucketing spec
 - readme should include required flyway drivers
+- email sender (smtp, ses)

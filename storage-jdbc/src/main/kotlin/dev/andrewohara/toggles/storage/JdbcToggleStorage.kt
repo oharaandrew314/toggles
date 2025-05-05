@@ -3,12 +3,13 @@ package dev.andrewohara.toggles.storage
 import dev.andrewohara.toggles.EnvironmentName
 import dev.andrewohara.toggles.ProjectName
 import dev.andrewohara.toggles.SubjectId
-import dev.andrewohara.toggles.Toggle
-import dev.andrewohara.toggles.ToggleEnvironment
+import dev.andrewohara.toggles.TenantId
+import dev.andrewohara.toggles.toggles.Toggle
+import dev.andrewohara.toggles.toggles.ToggleEnvironment
 import dev.andrewohara.toggles.ToggleName
-import dev.andrewohara.toggles.UniqueId
 import dev.andrewohara.toggles.VariationName
 import dev.andrewohara.toggles.Weight
+import dev.andrewohara.toggles.toggles.ToggleStorage
 import dev.andrewohara.utils.jdbc.getStringOrNull
 import dev.andrewohara.utils.jdbc.toSequence
 import dev.andrewohara.utils.pagination.Page
@@ -44,20 +45,24 @@ private const val GET_TOGGLE = """
 """
 
 private const val INSERT_TOGGLE = """
-    INSERT INTO toggles (project_name, toggle_name, unique_id, created_on, updated_on, variations, default_variation)
+    INSERT INTO toggles (tenant_id, project_name, toggle_name, created_on, updated_on, variations, default_variation)
     VALUES (?, ?, ?, ?, ?, ?, ?)
 """
 
 private const val INSERT_ENVIRONMENT = """
     INSERT INTO toggle_environments
-    (project_name, toggle_name, environment, weights, overrides)
-    VALUES (?, ?, ?, ?, ?)
+    (tenant_id, project_name, toggle_name, environment, weights, overrides)
+    VALUES (?, ?, ?, ?, ?, ?)
 """
 
-private const val DELETE_TOGGLE = "DELETE FROM toggles WHERE project_name = ? AND toggle_name = ?"
+private const val DELETE_TOGGLE = """
+    DELETE FROM toggles
+    WHERE tenant_id = ? AND project_name = ? AND toggle_name = ?
+""""
 
 internal fun jdbcToggleStorage(dataSource: DataSource) = object: ToggleStorage {
     override fun list(
+        tenantId: TenantId,
         projectName: ProjectName,
         pageSize: Int
     ) = Paginator<Toggle, ToggleName> { cursor ->
@@ -67,8 +72,9 @@ internal fun jdbcToggleStorage(dataSource: DataSource) = object: ToggleStorage {
                 ResultSet.TYPE_SCROLL_INSENSITIVE,
                 ResultSet.CONCUR_READ_ONLY
             ).use { stmt ->
-                stmt.setString(1, projectName.value)
-                stmt.setString(2, cursor?.value ?: "")
+                stmt.setString(1, tenantId.value)
+                stmt.setString(2, projectName.value)
+                stmt.setString(3, cursor?.value ?: "")
 
                 stmt.executeQuery().use { rs ->
                     rs.toSequence()
@@ -85,14 +91,15 @@ internal fun jdbcToggleStorage(dataSource: DataSource) = object: ToggleStorage {
         )
     }
 
-    override fun get(projectName: ProjectName, toggleName: ToggleName) = dataSource.connection.use { conn ->
+    override fun get(tenantId: TenantId, projectName: ProjectName, toggleName: ToggleName) = dataSource.connection.use { conn ->
         conn.prepareStatement(
             GET_TOGGLE,
             ResultSet.TYPE_SCROLL_INSENSITIVE,
             ResultSet.CONCUR_READ_ONLY
         ).use { stmt ->
-            stmt.setString(1, projectName.value)
-            stmt.setString(2, toggleName.value)
+            stmt.setString(1, tenantId.value)
+            stmt.setString(2, projectName.value)
+            stmt.setString(3, toggleName.value)
 
             stmt.executeQuery().use { rs ->
                 if (rs.next()) rs.toToggle() else null
@@ -112,7 +119,6 @@ internal fun jdbcToggleStorage(dataSource: DataSource) = object: ToggleStorage {
             prepareStatement(INSERT_TOGGLE).use { stmt ->
                 stmt.setString(1, toggle.projectName.value)
                 stmt.setString(2, toggle.toggleName.value)
-                stmt.setString(3, toggle.uniqueId.value)
                 stmt.setTimestamp(4, Timestamp.from(toggle.createdOn))
                 stmt.setTimestamp(5, Timestamp.from(toggle.updatedOn))
                 stmt.setString(6, variationsMapping(toggle.variations))
@@ -135,11 +141,12 @@ internal fun jdbcToggleStorage(dataSource: DataSource) = object: ToggleStorage {
         }
     }
 
-    override fun remove(projectName: ProjectName, toggleName: ToggleName) {
+    override fun minusAssign(toggle: Toggle) {
         dataSource.connection.use { conn ->
             conn.prepareStatement(DELETE_TOGGLE).use { stmt ->
-                stmt.setString(1, projectName.value)
-                stmt.setString(2, toggleName.value)
+                stmt.setString(1, toggle.tenantId.value)
+                stmt.setString(1, toggle.projectName.value)
+                stmt.setString(3, toggle.toggleName.value)
 
                 stmt.execute()
             }
@@ -149,9 +156,9 @@ internal fun jdbcToggleStorage(dataSource: DataSource) = object: ToggleStorage {
 
 private fun ResultSet.toToggle(): Toggle {
     val toggle = Toggle(
+        tenantId = TenantId.parse(getString("tenant_id")),
         projectName = ProjectName.parse(getString("project_name")),
         toggleName = ToggleName.parse(getString("toggle_name")),
-        uniqueId = UniqueId.parse(getString("unique_id")),
         createdOn = getTimestamp("created_on").toInstant(),
         updatedOn = getTimestamp("updated_on").toInstant(),
         variations = variationsMapping(getString("variations")),

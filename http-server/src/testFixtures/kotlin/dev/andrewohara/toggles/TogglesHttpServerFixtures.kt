@@ -1,5 +1,9 @@
 package dev.andrewohara.toggles
 
+import dev.andrewohara.toggles.toggles.ToggleCreateData
+import dev.andrewohara.toggles.toggles.ToggleEnvironment
+import dev.andrewohara.toggles.toggles.ToggleUpdateData
+
 val mostlyOld = ToggleEnvironment(
     weights = mapOf(
         old to Weight.of(2),

@@ -3,8 +3,12 @@ package dev.andrewohara.toggles
 import dev.andrewohara.toggles.http.TogglesErrorDto
 import dev.andrewohara.toggles.http.TogglesPageDto
 import dev.andrewohara.toggles.http.server.toDto
-import dev.andrewohara.toggles.storage.Storage
-import dev.andrewohara.toggles.storage.inMemory
+import dev.andrewohara.toggles.projects.ProjectCreateData
+import dev.andrewohara.toggles.projects.createProject
+import dev.andrewohara.toggles.tenants.Tenant
+import dev.andrewohara.toggles.toggles.Toggle
+import dev.andrewohara.toggles.toggles.createToggle
+import dev.andrewohara.toggles.toggles.listToggles
 import dev.andrewohara.utils.pagination.Page
 import dev.forkhandles.result4k.kotest.shouldBeFailure
 import dev.forkhandles.result4k.kotest.shouldBeSuccess
@@ -12,10 +16,21 @@ import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.Duration
 
 abstract class TogglesHttpContract: ServerContractBase() {
+
+    private lateinit var tenant1: Tenant
+
+    @BeforeEach
+    override fun setup() {
+        super.setup()
+
+        tenant1 = Tenant(TenantId.random(random), TenantName.of("default"), time)
+            .also(storage.tenants::plusAssign)
+    }
     
     @Test
     fun `create toggle - project not found`() {
@@ -29,8 +44,8 @@ abstract class TogglesHttpContract: ServerContractBase() {
     
     @Test
     fun `create toggle - already exists`() {
-        toggles.createProject(ProjectCreateData(projectName1, devAndProd)).shouldBeSuccess()
-        toggles.createToggle(projectName1, oldNewData.toCreate(toggleName1)).shouldBeSuccess()
+        toggles.createProject(tenant1.tenantId, ProjectCreateData(projectName1, devAndProd)).shouldBeSuccess()
+        toggles.createToggle(tenant1.tenantId, projectName1, oldNewData.toCreate(toggleName1)).shouldBeSuccess()
 
         httpClient.createToggle(
             projectName = projectName1,
@@ -42,11 +57,11 @@ abstract class TogglesHttpContract: ServerContractBase() {
     
     @Test
     fun `create toggle - success`() {
-        toggles.createProject(ProjectCreateData(projectName1, devAndProd)).shouldBeSuccess()
+        toggles.createProject(tenant1.tenantId, ProjectCreateData(projectName1, devAndProd)).shouldBeSuccess()
 
         val expected = Toggle(
+            tenantId = tenant1.tenantId,
             projectName = projectName1,
-            uniqueId = UniqueId.of("AM1p6cnc"),
             toggleName = toggleName1,
             variations = oldNewData.variations,
             defaultVariation = oldNewData.defaultVariation,
@@ -63,7 +78,7 @@ abstract class TogglesHttpContract: ServerContractBase() {
             data = oldNewData.toCreate(toggleName1).toDto()
         ) shouldBeSuccess expected.toDto()
 
-        toggles.listToggles(projectName1, null) shouldBeSuccess Page(
+        toggles.listToggles(tenant1.tenantId, projectName1, null) shouldBeSuccess Page(
             items = listOf(expected),
             next = null
         )
@@ -71,28 +86,28 @@ abstract class TogglesHttpContract: ServerContractBase() {
 
     @Test
     fun `create toggle - duplicate in other project`() {
-        toggles.createProject(ProjectCreateData(projectName1, devAndProd)).shouldBeSuccess()
-        toggles.createProject(ProjectCreateData(projectName2, devAndProd)).shouldBeSuccess()
-        val toggle1 = toggles.createToggle(projectName1, oldNewData.toCreate(toggleName1)).shouldBeSuccess()
+        toggles.createProject(tenant1.tenantId, ProjectCreateData(projectName1, devAndProd)).shouldBeSuccess()
+        toggles.createProject(tenant1.tenantId, ProjectCreateData(projectName2, devAndProd)).shouldBeSuccess()
+        val toggle1 = toggles.createToggle(tenant1.tenantId, projectName1, oldNewData.toCreate(toggleName1)).shouldBeSuccess()
 
         val toggle2 = httpClient.createToggle(
             projectName = projectName2,
             data = oldNewData.toCreate(toggleName1).toDto()
         ).shouldBeSuccess()
 
-        toggles.listToggles(projectName1, null) shouldBeSuccess Page(listOf(toggle1), null)
+        toggles.listToggles(tenant1.tenantId, projectName1, null) shouldBeSuccess Page(listOf(toggle1), null)
         httpClient.listToggles(projectName2, null) shouldBeSuccess TogglesPageDto(listOf(toggle2), null)
     }
     
     @Test
     fun `list toggles - success`() {
-        toggles.createProject(ProjectCreateData(projectName1, devAndProd)).shouldBeSuccess()
-        toggles.createProject(ProjectCreateData(projectName2, devAndProd)).shouldBeSuccess()
+        toggles.createProject(tenant1.tenantId, ProjectCreateData(projectName1, devAndProd)).shouldBeSuccess()
+        toggles.createProject(tenant1.tenantId, ProjectCreateData(projectName2, devAndProd)).shouldBeSuccess()
 
-        val toggle1 = toggles.createToggle(projectName1, oldNewData.toCreate(toggleName1)).shouldBeSuccess()
-        val toggle2 = toggles.createToggle(projectName1, oldNewData.toCreate(toggleName2)).shouldBeSuccess()
-        val toggle3 = toggles.createToggle(projectName1, oldNewData.toCreate(toggleName3)).shouldBeSuccess()
-        val toggle4 = toggles.createToggle(projectName2, oldNewData.toCreate(toggleName1)).shouldBeSuccess()
+        val toggle1 = toggles.createToggle(tenant1.tenantId, projectName1, oldNewData.toCreate(toggleName1)).shouldBeSuccess()
+        val toggle2 = toggles.createToggle(tenant1.tenantId, projectName1, oldNewData.toCreate(toggleName2)).shouldBeSuccess()
+        val toggle3 = toggles.createToggle(tenant1.tenantId, projectName1, oldNewData.toCreate(toggleName3)).shouldBeSuccess()
+        val toggle4 = toggles.createToggle(tenant1.tenantId, projectName2, oldNewData.toCreate(toggleName1)).shouldBeSuccess()
 
         val page1 = httpClient.listToggles(projectName1, null).shouldBeSuccess()
         page1.items.shouldHaveSize(2)
@@ -114,7 +129,7 @@ abstract class TogglesHttpContract: ServerContractBase() {
     
     @Test
     fun `update toggle - toggle not found`() {
-        toggles.createProject(ProjectCreateData(projectName1, devAndProd)).shouldBeSuccess()
+        toggles.createProject(tenant1.tenantId, ProjectCreateData(projectName1, devAndProd)).shouldBeSuccess()
 
         httpClient.updateToggle(
             projectName = projectName1,
@@ -138,8 +153,8 @@ abstract class TogglesHttpContract: ServerContractBase() {
     
     @Test
     fun `update toggle - success`() {
-        toggles.createProject(ProjectCreateData(projectName1, devAndProd)).shouldBeSuccess()
-        val original = toggles.createToggle(projectName1, oldNewData.toCreate(toggleName1)).shouldBeSuccess()
+        toggles.createProject(tenant1.tenantId, ProjectCreateData(projectName1, devAndProd)).shouldBeSuccess()
+        val original = toggles.createToggle(tenant1.tenantId, projectName1, oldNewData.toCreate(toggleName1)).shouldBeSuccess()
 
         time += Duration.ofSeconds(5)
 
@@ -156,7 +171,7 @@ abstract class TogglesHttpContract: ServerContractBase() {
             data = onOffData.toDto()
         ) shouldBeSuccess expected.toDto()
 
-        toggles.listToggles(projectName1, null) shouldBeSuccess Page(
+        toggles.listToggles(tenant1.tenantId, projectName1, null) shouldBeSuccess Page(
             items = listOf(expected),
             next = null
         )
@@ -174,7 +189,7 @@ abstract class TogglesHttpContract: ServerContractBase() {
 
     @Test
     fun `get toggle - toggle not found`() {
-        toggles.createProject(ProjectCreateData(projectName1, devAndProd)).shouldBeSuccess()
+        toggles.createProject(tenant1.tenantId, ProjectCreateData(projectName1, devAndProd)).shouldBeSuccess()
 
         httpClient.getToggle(
             projectName = projectName1,
@@ -186,9 +201,9 @@ abstract class TogglesHttpContract: ServerContractBase() {
 
     @Test
     fun `get toggle - success`() {
-        toggles.createProject(ProjectCreateData(projectName1, devAndProd)).shouldBeSuccess()
+        toggles.createProject(tenant1.tenantId, ProjectCreateData(projectName1, devAndProd)).shouldBeSuccess()
 
-        val toggle = toggles.createToggle(projectName1, oldNewData.toCreate(toggleName1)).shouldBeSuccess()
+        val toggle = toggles.createToggle(tenant1.tenantId, projectName1, oldNewData.toCreate(toggleName1)).shouldBeSuccess()
 
         httpClient.getToggle(
             projectName = projectName1,
@@ -208,7 +223,7 @@ abstract class TogglesHttpContract: ServerContractBase() {
 
     @Test
     fun `delete toggle - toggle not found`() {
-        toggles.createProject(ProjectCreateData(projectName1, devAndProd)).shouldBeSuccess()
+        toggles.createProject(tenant1.tenantId, ProjectCreateData(projectName1, devAndProd)).shouldBeSuccess()
 
         httpClient.deleteToggle(
             projectName = projectName1,
@@ -220,15 +235,15 @@ abstract class TogglesHttpContract: ServerContractBase() {
 
     @Test
     fun `delete toggle - success`() {
-        toggles.createProject(ProjectCreateData(projectName1, devAndProd)).shouldBeSuccess()
-        val toggle = toggles.createToggle(projectName1, oldNewData.toCreate(toggleName1)).shouldBeSuccess()
+        toggles.createProject(tenant1.tenantId, ProjectCreateData(projectName1, devAndProd)).shouldBeSuccess()
+        val toggle = toggles.createToggle(tenant1.tenantId, projectName1, oldNewData.toCreate(toggleName1)).shouldBeSuccess()
 
         httpClient.deleteToggle(
             projectName = projectName1,
             toggleName = toggleName1
         ) shouldBeSuccess toggle.toDto()
 
-        toggles.listToggles(projectName1, null) shouldBeSuccess Page(
+        toggles.listToggles(tenant1.tenantId, projectName1, null) shouldBeSuccess Page(
             items = emptyList(),
             next = null
         )

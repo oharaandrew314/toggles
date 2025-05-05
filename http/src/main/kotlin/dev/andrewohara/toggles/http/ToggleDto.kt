@@ -4,7 +4,6 @@ import dev.andrewohara.toggles.EnvironmentName
 import dev.andrewohara.toggles.ProjectName
 import dev.andrewohara.toggles.SubjectId
 import dev.andrewohara.toggles.ToggleName
-import dev.andrewohara.toggles.UniqueId
 import dev.andrewohara.toggles.VariationName
 import dev.andrewohara.toggles.Weight
 import org.http4k.contract.Tag
@@ -15,7 +14,6 @@ import java.time.Instant
 data class ToggleDto(
     val projectName: ProjectName,
     val toggleName: ToggleName,
-    val uniqueId: UniqueId,
     val createdOn: Instant,
     val updatedOn: Instant,
     val variations: List<VariationName>,
@@ -31,7 +29,6 @@ data class ToggleDto(
         val sample = ToggleDto(
             projectName = ProjectName.of("my_project"),
             toggleName = ToggleName.of("my_toggle"),
-            uniqueId = UniqueId.of("abcdefgh"),
             variations = listOf(VariationName.of("off"), VariationName.of("on")),
             defaultVariation = VariationName.of("off"),
             createdOn = Instant.parse("2025-04-24T12:00:00Z"),
