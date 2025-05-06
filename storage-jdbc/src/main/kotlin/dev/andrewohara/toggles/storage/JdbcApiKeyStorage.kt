@@ -15,7 +15,7 @@ import javax.sql.DataSource
 private const val LIST = """
     SELECT tenant_id, project_name, environment_name, created_on
     FROM api_keys 
-    WHERE project_name = ? AND environment_name >= ?
+    WHERE tenant_id = ? AND project_name = ? AND environment_name >= ?
     ORDER BY environment_name ASC
     LIMIT ?
 """
@@ -23,7 +23,7 @@ private const val LIST = """
 private const val GET = """
     SELECT tenant_id, project_name, environment_name, created_on
     FROM api_keys 
-    WHERE project_name = ? AND environment_name = ?
+    WHERE tenant_id = ? AND project_name = ? AND environment_name = ?
 """
 
 private const val INSERT = """

@@ -1,8 +1,8 @@
 package dev.andrewohara.toggles.storage
 
-import dev.andrewohara.toggles.ApiKeysStorageContract
-import dev.andrewohara.toggles.ProjectStorageContract
-import dev.andrewohara.toggles.ToggleStorageContract
+import dev.andrewohara.toggles.apikeys.ApiKeysStorageContract
+import dev.andrewohara.toggles.projects.ProjectStorageContract
+import dev.andrewohara.toggles.toggles.ToggleStorageContract
 import org.testcontainers.containers.JdbcDatabaseContainer
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.junit.jupiter.Container

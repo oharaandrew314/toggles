@@ -9,10 +9,11 @@ import dev.forkhandles.result4k.map
 import dev.forkhandles.result4k.peek
 import java.security.MessageDigest
 
+@OptIn(ExperimentalStdlibApi::class)
 fun TogglesApp.hash(apiKey: ApiKey) = MessageDigest.getInstance("SHA-256").run {
     update(secretKey)
     val bytes = digest(apiKey.value.toByteArray())
-    ApiKeyHash.of(bytes)
+    ApiKeyHash.parse(bytes.toHexString())
 }
 
 fun TogglesApp.generateApiKey(tenantId: TenantId, projectName: ProjectName, environmentName: EnvironmentName) = storage

@@ -1,6 +1,6 @@
 package dev.andrewohara.toggles
 
-import dev.forkhandles.values.AbstractValue
+import dev.forkhandles.values.Base16StringValueFactory
 import dev.forkhandles.values.Base64StringValueFactory
 import dev.forkhandles.values.ComparableValue
 import dev.forkhandles.values.IntValue
@@ -9,7 +9,6 @@ import dev.forkhandles.values.Maskers
 import dev.forkhandles.values.StringValue
 import dev.forkhandles.values.StringValueFactory
 import dev.forkhandles.values.Value
-import dev.forkhandles.values.ValueFactory
 import dev.forkhandles.values.and
 import dev.forkhandles.values.exactLength
 import dev.forkhandles.values.maxLength
@@ -25,41 +24,26 @@ private val nameValidation = 4.minLength
     .and(tokenValidator)
 
 abstract class ResourceIdValueFactory<V: Value<String>>(
-    coerceFn: (String) -> V
-): Base64StringValueFactory<V>(coerceFn, validation = 16.exactLength) {
+    coerceFn: (String) -> V,
+    val length: Int
+): Base64StringValueFactory<V>(coerceFn, validation = length.exactLength) {
     private val chars = ('a'..'z') + ('A'..'Z') + ('0'..'9')
-    fun random(random: Random) = of(List(16) { chars.random(random) }.joinToString(""))
+    fun random(random: Random) = of(List(length) { chars.random(random) }.joinToString(""))
 }
-
-abstract class HexValue(value: ByteArray): AbstractValue<ByteArray>(value) {
-    override fun equals(other: Any?): Boolean {
-        if (other !is HexValue) return false
-        return value.contentEquals(other.value)
-    }
-
-    override fun hashCode() = value.contentHashCode()
-}
-
-@OptIn(ExperimentalStdlibApi::class)
-abstract class HexValueFactory<V: Value<ByteArray>>(coerceFn: (ByteArray) -> V, bytes: Int): ValueFactory<V, ByteArray>(
-    coerceFn = coerceFn,
-    parseFn = String::hexToByteArray,
-    showFn = ByteArray::toHexString,
-    validation = { it.size == bytes }
-)
 
 class TenantId private constructor(value: String): StringValue(value), ComparableValue<TenantId, String> {
-    companion object: ResourceIdValueFactory<TenantId>(::TenantId)
+    companion object: ResourceIdValueFactory<TenantId>(::TenantId, 8)
 }
 
-class TenantName private constructor(value: String): StringValue(value), ComparableValue<TenantName, String> {
-    companion object: StringValueFactory<TenantName>(::TenantName, nameValidation)
-}
-
-class UserId private constructor(value: ByteArray): HexValue(value), Comparable<UserId> {
+class UserId private constructor(value: String): StringValue(value), Comparable<UserId> {
     override fun compareTo(other: UserId) = show(this).compareTo(show(other))
 
-    companion object: HexValueFactory<UserId>(::UserId, 16)
+    companion object: Base16StringValueFactory<UserId>(
+        fn = ::UserId,
+        validation = 32.exactLength,
+        parseFn = String::uppercase,
+        showFn = String::lowercase
+    )
 }
 
 class EmailAddress private constructor(value: String): StringValue(value), ComparableValue<EmailAddress, String> {
@@ -96,9 +80,9 @@ class EnvironmentName private constructor(value: String): StringValue(value), Co
 }
 
 class ApiKey private constructor(value: String): StringValue(value, Maskers.hidden()) {
-    companion object: ResourceIdValueFactory<ApiKey>(::ApiKey)
+    companion object: ResourceIdValueFactory<ApiKey>(::ApiKey, 16)
 }
 
 class UniqueId private constructor(value: String): StringValue(value) {
-    companion object: Base64StringValueFactory<UniqueId>(::UniqueId, 16.exactLength)
+    companion object: Base64StringValueFactory<UniqueId>(::UniqueId, 8.exactLength)
 }

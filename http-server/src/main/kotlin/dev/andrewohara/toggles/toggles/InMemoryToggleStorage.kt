@@ -18,7 +18,7 @@ internal fun inMemoryToggleStorage() = object: ToggleStorage {
             val page = toggles
                 .filter { it.tenantId == tenantId && it.projectName == projectName }
                 .sortedBy { "${it.projectName}/${it.toggleName}" }
-                .dropWhile { cursor != null && it.toggleName <= cursor }
+                .dropWhile { cursor != null && it.toggleName < cursor }
                 .take(pageSize + 1)
 
             Page(
@@ -31,7 +31,12 @@ internal fun inMemoryToggleStorage() = object: ToggleStorage {
         return toggles.find { it.tenantId == tenantId && it.projectName == projectName && it.toggleName == toggleName }
     }
 
-    override fun plusAssign(toggle: Toggle) = toggles.plusAssign(toggle)
+    override fun plusAssign(toggle: Toggle) {
+        this -= toggle
+        toggles += toggle
+    }
 
-    override fun minusAssign(toggle: Toggle) = toggles.minusAssign(toggle)
+    override fun minusAssign(toggle: Toggle) {
+        toggles.removeIf { it.tenantId == toggle.tenantId && it.projectName == toggle.projectName && it.toggleName == toggle.toggleName }
+    }
 }

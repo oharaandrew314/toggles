@@ -29,7 +29,8 @@ private const val LIST_TOGGLES = """
         ON toggles.project_name = envs.project_name
         AND toggles.toggle_name = envs.toggle_name
     WHERE
-        toggles.project_name = ?
+        toggles.tenant_id = ?
+        AND toggles.project_name = ?
         AND toggles.toggle_name >= ?
     ORDER BY project_name ASC, toggle_name ASC
 """
@@ -40,7 +41,8 @@ private const val GET_TOGGLE = """
         ON toggles.project_name = envs.project_name
         AND toggles.toggle_name = envs.toggle_name
     WHERE
-        toggles.project_name = ?
+        toggles.tenant_id = ?
+        AND toggles.project_name = ?
         AND toggles.toggle_name = ?
 """
 
@@ -58,7 +60,7 @@ private const val INSERT_ENVIRONMENT = """
 private const val DELETE_TOGGLE = """
     DELETE FROM toggles
     WHERE tenant_id = ? AND project_name = ? AND toggle_name = ?
-""""
+"""
 
 internal fun jdbcToggleStorage(dataSource: DataSource) = object: ToggleStorage {
     override fun list(
@@ -110,15 +112,17 @@ internal fun jdbcToggleStorage(dataSource: DataSource) = object: ToggleStorage {
     override fun plusAssign(toggle: Toggle) {
         dataSource.transaction {
             prepareStatement(DELETE_TOGGLE).use { stmt ->
-                stmt.setString(1, toggle.projectName.value)
-                stmt.setString(2, toggle.toggleName.value)
+                stmt.setString(1, toggle.tenantId.value)
+                stmt.setString(2, toggle.projectName.value)
+                stmt.setString(3, toggle.toggleName.value)
 
                 stmt.executeUpdate()
             }
 
             prepareStatement(INSERT_TOGGLE).use { stmt ->
-                stmt.setString(1, toggle.projectName.value)
-                stmt.setString(2, toggle.toggleName.value)
+                stmt.setString(1, toggle.tenantId.value)
+                stmt.setString(2, toggle.projectName.value)
+                stmt.setString(3, toggle.toggleName.value)
                 stmt.setTimestamp(4, Timestamp.from(toggle.createdOn))
                 stmt.setTimestamp(5, Timestamp.from(toggle.updatedOn))
                 stmt.setString(6, variationsMapping(toggle.variations))
@@ -129,11 +133,12 @@ internal fun jdbcToggleStorage(dataSource: DataSource) = object: ToggleStorage {
 
             for ((envName, env) in toggle.environments) {
                 prepareStatement(INSERT_ENVIRONMENT).use { stmt ->
-                    stmt.setString(1, toggle.projectName.value)
-                    stmt.setString(2, toggle.toggleName.value)
-                    stmt.setString(3, envName.value)
-                    stmt.setString(4, weightsMapping(env.weights))
-                    stmt.setString(5, overridesMapping(env.overrides))
+                    stmt.setString(1, toggle.tenantId.value)
+                    stmt.setString(2, toggle.projectName.value)
+                    stmt.setString(3, toggle.toggleName.value)
+                    stmt.setString(4, envName.value)
+                    stmt.setString(5, weightsMapping(env.weights))
+                    stmt.setString(6, overridesMapping(env.overrides))
 
                     stmt.executeUpdate()
                 }
@@ -145,7 +150,7 @@ internal fun jdbcToggleStorage(dataSource: DataSource) = object: ToggleStorage {
         dataSource.connection.use { conn ->
             conn.prepareStatement(DELETE_TOGGLE).use { stmt ->
                 stmt.setString(1, toggle.tenantId.value)
-                stmt.setString(1, toggle.projectName.value)
+                stmt.setString(2, toggle.projectName.value)
                 stmt.setString(3, toggle.toggleName.value)
 
                 stmt.execute()

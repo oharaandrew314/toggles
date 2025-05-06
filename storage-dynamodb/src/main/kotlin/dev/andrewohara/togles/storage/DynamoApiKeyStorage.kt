@@ -27,9 +27,12 @@ fun dynamoApiKeyStorage(
         pageSize: Int,
     ) = Paginator<ApiKeyMeta, EnvironmentName> { cursor ->
         val page = table.primaryIndex().queryPage(
-           HashKey = tenantId to projectName,
+           HashKey = ProjectRef(tenantId, projectName),
            ExclusiveStartKey = cursor?.let {
-               Key(ProjectName.attribute of projectName, EnvironmentName.attribute of cursor)
+               Key(
+                   projectRefAttr of ProjectRef(tenantId, projectName),
+                   EnvironmentName.attribute of cursor
+               )
            },
            Limit = pageSize
         )
@@ -41,17 +44,17 @@ fun dynamoApiKeyStorage(
     }
 
     override fun get(tenantId: TenantId, projectName: ProjectName, environment: EnvironmentName) =
-        table[tenantId to projectName, environment]?.toModel()
+        table[ProjectRef(tenantId, projectName), environment]?.toModel()
 
     override fun set(meta: ApiKeyMeta, apiKeyHash: ApiKeyHash) = table.plusAssign(DynamoApiKey(
-        projectRef = meta.tenantId to meta.projectName,
-        environment = meta.environment,
+        projectRef = projectRefMapping(ProjectRef(meta.tenantId, meta.projectName)),
+        environmentName = meta.environment,
         createdOn = meta.createdOn,
         hash = apiKeyHash.toString()
     ))
 
     override fun minusAssign(meta: ApiKeyMeta) =
-        table.delete(meta.tenantId to meta.projectName, meta.environment)
+        table.delete(ProjectRef(meta.tenantId, meta.projectName), meta.environment)
 
     override fun get(apiKeyHash: ApiKeyHash) = table
         .index(DynamoApiKey.lookupIndex)
@@ -63,8 +66,8 @@ fun dynamoApiKeyStorage(
 
 @JsonSerializable
 data class DynamoApiKey(
-    val projectRef: ProjectRef,
-    val environment: EnvironmentName,
+    val projectRef: String,
+    val environmentName: EnvironmentName,
     val createdOn: Instant,
     val hash: String
 ) {
@@ -73,14 +76,14 @@ data class DynamoApiKey(
             indexName = IndexName.of("lookup"),
             hashKeyAttribute = Attribute.string().required("hash"),
             sortKeyAttribute = null,
-            lens = togglesJson.autoDynamoLens()
+            lens = dynamoJson.autoDynamoLens()
         )
     }
 }
 
 private fun DynamoApiKey.toModel() = ApiKeyMeta(
-    tenantId = projectRef.first,
-    projectName = projectRef.second,
-    environment = environment,
+    tenantId = projectRefMapping(projectRef).tenantId,
+    projectName = projectRefMapping(projectRef).projectName,
+    environment = environmentName,
     createdOn = createdOn
 )

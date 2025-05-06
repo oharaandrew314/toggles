@@ -7,7 +7,6 @@ import dev.andrewohara.toggles.TenantId
 import dev.andrewohara.toggles.toggles.Toggle
 import dev.andrewohara.toggles.toggles.ToggleEnvironment
 import dev.andrewohara.toggles.ToggleName
-import dev.andrewohara.toggles.UniqueId
 import dev.andrewohara.toggles.VariationName
 import dev.andrewohara.toggles.Weight
 import dev.andrewohara.toggles.toggles.ToggleStorage
@@ -29,11 +28,11 @@ internal fun dynamoToggleStorage(
         pageSize: Int
     ) = Paginator<Toggle, ToggleName> { cursor ->
         val page = toggles.primaryIndex().queryPage(
-            HashKey = tenantId to projectName,
+            HashKey = ProjectRef(tenantId, projectName),
             Limit = pageSize,
             ExclusiveStartKey = cursor?.let {
                 Key(
-                    ProjectName.attribute of projectName,
+                    projectRefAttr of ProjectRef(tenantId, projectName),
                     ToggleName.attribute of cursor
                 )
             }
@@ -46,16 +45,19 @@ internal fun dynamoToggleStorage(
     }
 
     override fun get(tenantId: TenantId, projectName: ProjectName, toggleName: ToggleName) =
-        toggles[tenantId to projectName, toggleName]?.toModel()
+        toggles[ProjectRef(tenantId, projectName), toggleName]?.toModel()
 
     override fun plusAssign(toggle: Toggle) = toggles.plusAssign(toggle.toDynamo())
 
-    override fun minusAssign(toggle: Toggle) = toggles.delete(toggle.tenantId to toggle.projectName, toggle.toggleName)
+    override fun minusAssign(toggle: Toggle) = toggles.delete(
+        hashKey = ProjectRef(toggle.tenantId, toggle.projectName),
+        sortKey = toggle.toggleName
+    )
 }
 
 @JsonSerializable
 internal data class DynamoToggle(
-    val projectRef: ProjectRef,
+    val projectRef: String,
     val toggleName: ToggleName,
     val createdOn: Instant,
     val updatedOn: Instant,
@@ -70,9 +72,9 @@ internal data class DynamoEnvironment(
     val variations: Map<VariationName, Weight>
 )
 
-internal fun DynamoToggle.toModel() = Toggle(
-    tenantId = projectRef.first,
-    projectName = projectRef.second,
+private fun DynamoToggle.toModel() = Toggle(
+    tenantId = projectRefMapping(projectRef).tenantId,
+    projectName = projectRefMapping(projectRef).projectName,
     toggleName = toggleName,
     createdOn = createdOn,
     updatedOn = updatedOn,
@@ -83,8 +85,8 @@ internal fun DynamoToggle.toModel() = Toggle(
     }
 )
 
-internal fun Toggle.toDynamo() = DynamoToggle(
-    projectRef = tenantId to projectName,
+private fun Toggle.toDynamo() = DynamoToggle(
+    projectRef = projectRefMapping(ProjectRef(tenantId, projectName)),
     toggleName = toggleName,
     createdOn = createdOn,
     updatedOn = updatedOn,

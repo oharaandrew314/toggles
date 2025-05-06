@@ -1,6 +1,15 @@
-package dev.andrewohara.toggles
+package dev.andrewohara.toggles.projects
 
-import dev.andrewohara.toggles.projects.Project
+import dev.andrewohara.toggles.ProjectName
+import dev.andrewohara.toggles.StorageContractBase
+import dev.andrewohara.toggles.TenantId
+import dev.andrewohara.toggles.dev
+import dev.andrewohara.toggles.devAndProd
+import dev.andrewohara.toggles.prod
+import dev.andrewohara.toggles.projectName1
+import dev.andrewohara.toggles.projectName2
+import dev.andrewohara.toggles.projectName3
+import dev.andrewohara.toggles.staging
 import dev.andrewohara.toggles.tenants.Tenant
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.collections.shouldHaveSize
@@ -12,7 +21,7 @@ import org.junit.jupiter.api.Test
 import java.time.Duration
 
 abstract class ProjectStorageContract: StorageContractBase() {
-    
+
     private lateinit var tenant1: Tenant
 
     private lateinit var project1: Project
@@ -23,14 +32,20 @@ abstract class ProjectStorageContract: StorageContractBase() {
     override fun setup() {
         super.setup()
 
-        tenant1 = Tenant(TenantId.random(random), TenantName.of("default"), time)
+        tenant1 = Tenant(TenantId.Companion.random(random), time)
             .also(storage.tenants::plusAssign)
 
         project1 = Project(tenant1.tenantId, projectName1, time, time, devAndProd)
             .also(storage.projects::plusAssign)
-        project2 = Project(tenant1.tenantId, projectName2, time + Duration.ofMinutes(1), time + Duration.ofMinutes(1), devAndProd)
+        project2 = Project(tenant1.tenantId,
+            projectName2, time + Duration.ofMinutes(1), time + Duration.ofMinutes(1),
+            devAndProd
+        )
             .also(storage.projects::plusAssign)
-        project3 = Project(tenant1.tenantId, projectName3, time + Duration.ofMinutes(2), time + Duration.ofMinutes(2), devAndProd)
+        project3 = Project(tenant1.tenantId,
+            projectName3, time + Duration.ofMinutes(2), time + Duration.ofMinutes(2),
+            devAndProd
+        )
             .also(storage.projects::plusAssign)
 
         storage.projects.list(tenant1.tenantId, 100)
@@ -59,7 +74,7 @@ abstract class ProjectStorageContract: StorageContractBase() {
 
     @Test
     fun `get storage - not found`() {
-        storage.projects[tenant1.tenantId, ProjectName.of("missing")] shouldBe null
+        storage.projects[tenant1.tenantId, ProjectName.Companion.of("missing")] shouldBe null
     }
 
     @Test

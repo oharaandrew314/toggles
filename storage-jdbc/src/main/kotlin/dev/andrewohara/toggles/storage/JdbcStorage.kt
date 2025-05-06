@@ -21,7 +21,7 @@ fun Storage.Companion.jdbc(
         projects = jdbcProjectStorage(dataSource),
         toggles = jdbcToggleStorage(dataSource),
         apiKeys = jdbcApiKeyStorage(dataSource),
-        users = TODO(),
-        tenants = TODO(),
+        users = jdbcUserStorage(dataSource),
+        tenants = jdbcTenantStorage(dataSource)
     )
 }

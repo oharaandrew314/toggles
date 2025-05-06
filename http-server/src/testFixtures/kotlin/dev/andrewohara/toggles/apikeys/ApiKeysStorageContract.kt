@@ -1,8 +1,14 @@
-package dev.andrewohara.toggles
+package dev.andrewohara.toggles.apikeys
 
-import dev.andrewohara.toggles.apikeys.ApiKeyMeta
-import dev.andrewohara.toggles.apikeys.ApiKeyHash
+import dev.andrewohara.toggles.StorageContractBase
+import dev.andrewohara.toggles.TenantId
+import dev.andrewohara.toggles.dev
+import dev.andrewohara.toggles.devAndProd
+import dev.andrewohara.toggles.prod
+import dev.andrewohara.toggles.projectName1
+import dev.andrewohara.toggles.projectName2
 import dev.andrewohara.toggles.projects.Project
+import dev.andrewohara.toggles.staging
 import dev.andrewohara.toggles.tenants.Tenant
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
@@ -14,8 +20,12 @@ import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.Duration
+import kotlin.random.Random
 
 private const val SHA_256_SIZE = 32
+
+@OptIn(ExperimentalStdlibApi::class)
+private fun nextApiKeyHash(random: Random) = ApiKeyHash.parse(random.nextBytes(SHA_256_SIZE).toHexString())
 
 abstract class ApiKeysStorageContract: StorageContractBase() {
 
@@ -24,16 +34,16 @@ abstract class ApiKeysStorageContract: StorageContractBase() {
     private lateinit var project1: Project
     private lateinit var project2: Project
 
-    private val project1DevKey = ApiKeyHash.of(random.nextBytes(SHA_256_SIZE))
+    private val project1DevKey = nextApiKeyHash(random)
     private lateinit var project1Dev: ApiKeyMeta
 
-    private val project2DevKey = ApiKeyHash.of(random.nextBytes(SHA_256_SIZE))
+    private val project2DevKey =nextApiKeyHash(random)
     private lateinit var project2Dev: ApiKeyMeta
 
-    private val project2StagingKey = ApiKeyHash.of(random.nextBytes(SHA_256_SIZE))
+    private val project2StagingKey = nextApiKeyHash(random)
     private lateinit var project2Staging: ApiKeyMeta
 
-    private val project2ProdKey = ApiKeyHash.of(random.nextBytes(SHA_256_SIZE))
+    private val project2ProdKey = nextApiKeyHash(random)
     private lateinit var project2Prod: ApiKeyMeta
 
     @BeforeEach
@@ -41,8 +51,7 @@ abstract class ApiKeysStorageContract: StorageContractBase() {
         super.setup()
 
         tenant1 = Tenant(
-            tenantId = TenantId.random(random),
-            tenantName = TenantName.of("default"),
+            tenantId = TenantId.Companion.random(random),
             createdOn = time
         ).also(storage.tenants::plusAssign)
 
@@ -132,7 +141,7 @@ abstract class ApiKeysStorageContract: StorageContractBase() {
 
     @Test
     fun `exchange - not found`() {
-        storage.apiKeys[ApiKeyHash.of(random.nextBytes(SHA_256_SIZE))].shouldBeNull()
+        storage.apiKeys[nextApiKeyHash(random)].shouldBeNull()
     }
 
     @Test
@@ -142,7 +151,7 @@ abstract class ApiKeysStorageContract: StorageContractBase() {
 
     @Test
     fun `create new`() {
-        val newKey = ApiKeyHash.of(random.nextBytes(SHA_256_SIZE))
+        val newKey = nextApiKeyHash(random)
         val project1Prod = ApiKeyMeta(
             tenantId = tenant1.tenantId,
             projectName = projectName1,
@@ -158,7 +167,7 @@ abstract class ApiKeysStorageContract: StorageContractBase() {
 
     @Test
     fun `update existing`() {
-        val newKey = ApiKeyHash.of(random.nextBytes(SHA_256_SIZE))
+        val newKey = nextApiKeyHash(random)
 
         storage.apiKeys[project1Dev] = newKey
 

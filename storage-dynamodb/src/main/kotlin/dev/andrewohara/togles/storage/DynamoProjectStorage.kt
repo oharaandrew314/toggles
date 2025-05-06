@@ -18,7 +18,8 @@ internal fun dynamoProjectStorage(
 
     override fun list(tenantId: TenantId, pageSize: Int) = Paginator<Project, ProjectName> { cursor ->
         val page = projects.primaryIndex().scanPage(
-            ExclusiveStartKey = cursor?.let { Key(ProjectName.attribute of cursor) },
+            ExclusiveStartKey = cursor
+                ?.let { Key(TenantId.attribute of tenantId, ProjectName.attribute of cursor) },
             Limit = pageSize
         )
 
@@ -46,7 +47,7 @@ internal data class DynamoProject(
     val environments: List<EnvironmentName>
 )
 
-internal fun DynamoProject.toModel() = Project(
+private fun DynamoProject.toModel() = Project(
     tenantId = tenantId,
     projectName = projectName,
     createdOn = createdOn,
@@ -54,7 +55,7 @@ internal fun DynamoProject.toModel() = Project(
     environments = environments
 )
 
-internal fun Project.toDynamo() = DynamoProject(
+private fun Project.toDynamo() = DynamoProject(
     tenantId = tenantId,
     projectName = projectName,
     createdOn = createdOn,

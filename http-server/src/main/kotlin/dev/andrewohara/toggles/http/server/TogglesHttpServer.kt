@@ -16,7 +16,6 @@ import dev.andrewohara.toggles.http.ToggleStateDto
 import dev.andrewohara.toggles.http.TogglesPageDto
 import dev.andrewohara.toggles.http.TogglesRoutes.projectCursorLens
 import dev.andrewohara.toggles.http.TogglesRoutes.toggleCursorLens
-import dev.andrewohara.toggles.http.TogglesRoutes.toggleNameLens
 import dev.andrewohara.toggles.projects.createProject
 import dev.andrewohara.toggles.projects.deleteProject
 import dev.andrewohara.toggles.projects.listProjects
@@ -32,14 +31,11 @@ import dev.forkhandles.result4k.map
 import dev.forkhandles.result4k.recover
 import dev.forkhandles.values.parseOrNull
 import org.http4k.contract.contract
-import org.http4k.contract.div
-import org.http4k.contract.meta
 import org.http4k.contract.openapi.ApiInfo
 import org.http4k.contract.openapi.v3.OpenApi3
 import org.http4k.contract.openapi.v3.OpenApi3ApiRenderer
 import org.http4k.contract.ui.swaggerUiLite
 import org.http4k.core.HttpHandler
-import org.http4k.core.Method
 import org.http4k.core.Request
 import org.http4k.core.Response
 import org.http4k.core.Status
@@ -59,6 +55,11 @@ fun TogglesApp.toHttpServer(): HttpHandler {
             ?.let(storage.apiKeys::get)
     })
 
+    val userSecurity = BearerAuthSecurity(userAuthLens, lookup = { idToken ->
+        userAuthorizer(idToken)
+            ?.let(storage.users::get)
+    })
+
     val api = contract {
         renderer = OpenApi3(
             ApiInfo("Toggles API", "1"),
@@ -67,19 +68,19 @@ fun TogglesApp.toHttpServer(): HttpHandler {
         )
         descriptionPath = "openapi.json"
 
-        routes += TogglesRoutes.listProjects to { request: Request ->
+        routes += TogglesRoutes.listProjects(userSecurity) to { request: Request ->
             val projects = listProjects(userAuthLens(request).tenantId,projectCursorLens(request))
             Response(Status.OK).with(ProjectsPageDto.lens of projects.toDto())
         }
 
-        routes += TogglesRoutes.createProject to { request: Request ->
+        routes += TogglesRoutes.createProject(userSecurity) to { request: Request ->
             val data = ProjectCreateDataDto.lens(request)
             createProject(userAuthLens(request).tenantId,data.toModel())
                 .map { Response(Status.OK).with(ProjectDto.lens of it.toDto()) }
                 .recover { it.toResponse() }
         }
 
-        routes += TogglesRoutes.updateProject to { projectName ->
+        routes += TogglesRoutes.updateProject(userSecurity) to { projectName ->
             { request ->
                 val data = ProjectUpdateDataDto.lens(request)
                 updateProject(userAuthLens(request).tenantId, projectName, data.toModel())
@@ -88,7 +89,7 @@ fun TogglesApp.toHttpServer(): HttpHandler {
             }
         }
 
-        routes += TogglesRoutes.deleteProject to { projectName ->
+        routes += TogglesRoutes.deleteProject(userSecurity) to { projectName ->
             { request ->
                 deleteProject(userAuthLens(request).tenantId, projectName)
                     .map { Response(Status.OK).with(ProjectDto.lens of it.toDto()) }
@@ -96,7 +97,7 @@ fun TogglesApp.toHttpServer(): HttpHandler {
             }
         }
 
-        routes += TogglesRoutes.listToggles to { projectName, _ ->
+        routes += TogglesRoutes.listToggles(userSecurity) to { projectName, _ ->
             { request ->
                 listToggles(userAuthLens(request).tenantId, projectName, toggleCursorLens(request))
                     .map { Response(Status.OK).with(TogglesPageDto.lens of it.toDto()) }
@@ -104,7 +105,7 @@ fun TogglesApp.toHttpServer(): HttpHandler {
             }
         }
 
-        routes += TogglesRoutes.getToggle to { projectName, _, toggleName ->
+        routes += TogglesRoutes.getToggle(userSecurity) to { projectName, _, toggleName ->
             { request ->
                 getToggle(userAuthLens(request).tenantId, projectName, toggleName)
                     .map { Response(Status.OK).with(ToggleDto.lens of it.toDto()) }
@@ -112,7 +113,7 @@ fun TogglesApp.toHttpServer(): HttpHandler {
             }
         }
 
-        routes += TogglesRoutes.createToggle to { projectName, _ ->
+        routes += TogglesRoutes.createToggle(userSecurity) to { projectName, _ ->
             { request ->
                 val data = ToggleCreateDataDto.lens(request)
                 createToggle(userAuthLens(request).tenantId, projectName, data.toModel())
@@ -121,7 +122,7 @@ fun TogglesApp.toHttpServer(): HttpHandler {
             }
         }
 
-        routes += TogglesRoutes.updateToggle to { projectName, _, toggleName ->
+        routes += TogglesRoutes.updateToggle(userSecurity) to { projectName, _, toggleName ->
             { request ->
                 val data = ToggleUpdateDataDto.lens(request)
                 updateToggle(userAuthLens(request).tenantId, projectName, toggleName, data.toModel())
@@ -130,7 +131,7 @@ fun TogglesApp.toHttpServer(): HttpHandler {
             }
         }
 
-        routes += TogglesRoutes.deleteToggle to { projectName, _, toggleName ->
+        routes += TogglesRoutes.deleteToggle(userSecurity) to { projectName, _, toggleName ->
             { request ->
                 deleteToggle(userAuthLens(request).tenantId, projectName, toggleName)
                     .map { Response(Status.OK).with(ToggleDto.lens of it.toDto()) }
@@ -138,13 +139,7 @@ fun TogglesApp.toHttpServer(): HttpHandler {
             }
         }
 
-        routes += "/v1/toggles" / toggleNameLens meta {
-            operationId = "v1GetToggleState"
-            summary = "Get Toggle State"
-            security = clientSecurity
-
-            returning(Status.OK, ToggleStateDto.lens to ToggleStateDto.sample)
-        } bindContract Method.GET to { toggleName ->
+        routes += TogglesRoutes.getToggleState(clientSecurity) to { toggleName ->
             { request ->
                 val principal = clientAuthLens(request)
                 getState(userAuthLens(request).tenantId, principal.projectName, toggleName, principal.environment)

@@ -32,7 +32,7 @@ private const val INSERT_PROJECT = """
     VALUES (?, ?, ?, ?, ?)
 """
 
-private const val DELETE_PROJECT = "DELETE FROM projects WHERE project_name = ?"
+private const val DELETE_PROJECT = "DELETE FROM projects WHERE tenant_id = ? AND project_name = ?"
 
 
 internal fun jdbcProjectStorage(dataSource: DataSource) = object: ProjectStorage {
@@ -70,16 +70,18 @@ internal fun jdbcProjectStorage(dataSource: DataSource) = object: ProjectStorage
     override fun plusAssign(project: Project) {
         dataSource.transaction {
             prepareStatement(DELETE_PROJECT).use { stmt ->
-                stmt.setString(1, project.projectName.value)
+                stmt.setString(1, project.tenantId.value)
+                stmt.setString(2, project.projectName.value)
 
                 stmt.executeUpdate()
             }
 
             prepareStatement(INSERT_PROJECT).use { stmt ->
-                stmt.setString(1, project.projectName.value)
-                stmt.setTimestamp(2, Timestamp.from(project.createdOn))
-                stmt.setTimestamp(3, Timestamp.from(project.updatedOn))
-                stmt.setString(4, environmentsMapping(project.environments))
+                stmt.setString(1, project.tenantId.value)
+                stmt.setString(2, project.projectName.value)
+                stmt.setTimestamp(3, Timestamp.from(project.createdOn))
+                stmt.setTimestamp(4, Timestamp.from(project.updatedOn))
+                stmt.setString(5, environmentsMapping(project.environments))
 
                 stmt.executeUpdate()
             }

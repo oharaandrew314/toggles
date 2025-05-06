@@ -1,10 +1,21 @@
-package dev.andrewohara.toggles
+package dev.andrewohara.toggles.toggles
 
+import dev.andrewohara.toggles.StorageContractBase
+import dev.andrewohara.toggles.TenantId
+import dev.andrewohara.toggles.devAndProd
+import dev.andrewohara.toggles.new
+import dev.andrewohara.toggles.off
+import dev.andrewohara.toggles.oldNewData
+import dev.andrewohara.toggles.on
+import dev.andrewohara.toggles.onOffData
+import dev.andrewohara.toggles.projectName1
+import dev.andrewohara.toggles.projectName2
 import dev.andrewohara.toggles.projects.Project
 import dev.andrewohara.toggles.tenants.Tenant
-import dev.andrewohara.toggles.toggles.Toggle
-import dev.andrewohara.toggles.toggles.ToggleUpdateData
-import dev.andrewohara.toggles.toggles.toToggle
+import dev.andrewohara.toggles.toCreate
+import dev.andrewohara.toggles.toggleName1
+import dev.andrewohara.toggles.toggleName2
+import dev.andrewohara.toggles.toggleName3
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.nulls.shouldBeNull
@@ -14,9 +25,9 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 abstract class ToggleStorageContract: StorageContractBase() {
-    
+
     private lateinit var tenant1: Tenant
-    
+
     private lateinit var toggle1: Toggle
     private lateinit var toggle2: Toggle
     private lateinit var toggle3: Toggle
@@ -25,8 +36,8 @@ abstract class ToggleStorageContract: StorageContractBase() {
     @BeforeEach
     override fun setup() {
         super.setup()
-        
-        tenant1 = Tenant(TenantId.random(random), TenantName.of("default"), time)
+
+        tenant1 = Tenant(TenantId.Companion.random(random), time)
             .also(storage.tenants::plusAssign)
 
         storage.projects += Project(tenant1.tenantId, projectName1, time, time, devAndProd)

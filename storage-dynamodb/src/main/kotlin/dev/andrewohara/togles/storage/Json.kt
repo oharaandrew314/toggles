@@ -3,12 +3,14 @@ package dev.andrewohara.togles.storage
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
 import dev.andrewohara.toggles.ApiKey
+import dev.andrewohara.toggles.EmailAddress
 import dev.andrewohara.toggles.EnvironmentName
 import dev.andrewohara.toggles.ProjectName
 import dev.andrewohara.toggles.SubjectId
 import dev.andrewohara.toggles.TenantId
 import dev.andrewohara.toggles.ToggleName
 import dev.andrewohara.toggles.UniqueId
+import dev.andrewohara.toggles.UserId
 import dev.andrewohara.toggles.VariationName
 import dev.andrewohara.toggles.Weight
 import org.http4k.format.ConfigurableMoshi
@@ -22,7 +24,7 @@ import se.ansman.kotshi.KotshiJsonAdapterFactory
 @KotshiJsonAdapterFactory
 private object TogglesDynamoStorageJsonAdapterFactory : JsonAdapter.Factory by KotshiTogglesDynamoStorageJsonAdapterFactory
 
-internal val togglesJson = Moshi.Builder()
+internal val dynamoJson = Moshi.Builder()
     .add(TogglesDynamoStorageJsonAdapterFactory)
     .add(ListAdapter)
     .add(MapAdapter)
@@ -37,6 +39,7 @@ internal val togglesJson = Moshi.Builder()
     .value(UniqueId)
     .value(ApiKey)
     .value(TenantId)
-    .text(projectRefMapping)
+    .value(UserId)
+    .value(EmailAddress)
     .done()
     .let { ConfigurableMoshi(it) }

@@ -25,3 +25,7 @@ val devAndProd = listOf(dev, prod)
 
 val uid1 = UniqueId.of("abcdefgh")
 val uid2 = UniqueId.of("bcdefghi")
+
+
+const val IDP1 = "idp1.com"
+val idp1Email1 = EmailAddress.of("user1@$IDP1")

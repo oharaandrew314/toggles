@@ -17,7 +17,7 @@ internal fun inMemoryProjectStorage() = object: ProjectStorage {
         val page = projects
             .filter { it.tenantId == tenantId }
             .sortedWith(comparator)
-            .dropWhile { cursor != null && it.projectName <= cursor }
+            .dropWhile { cursor != null && it.projectName < cursor }
             .take(pageSize + 1)
 
         Page(
@@ -29,7 +29,12 @@ internal fun inMemoryProjectStorage() = object: ProjectStorage {
     override fun get(tenantId: TenantId, projectName: ProjectName) = projects
         .find { it.tenantId == tenantId && it.projectName == projectName }
 
-    override fun plusAssign(project: Project) = projects.plusAssign(project)
+    override fun plusAssign(project: Project) {
+        this -= project
+        projects += project
+    }
 
-    override fun minusAssign(project: Project) = projects.minusAssign(project)
+    override fun minusAssign(project: Project) {
+        projects.removeIf { it.tenantId == project.tenantId && it.projectName == project.projectName }
+    }
 }

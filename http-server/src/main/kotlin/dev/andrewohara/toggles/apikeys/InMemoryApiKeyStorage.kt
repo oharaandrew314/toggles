@@ -19,7 +19,7 @@ internal fun apiKeyStorage() = object: ApiKeyStorage {
                 .filter { it.key.tenantId == tenantId && it.key.projectName == projectName }
                 .map { it.key }
                 .sortedBy { it.environment }
-                .dropWhile { cursor != null && it.environment <= cursor }
+                .dropWhile { cursor != null && it.environment < cursor }
                 .take(pageSize + 1)
 
             Page(

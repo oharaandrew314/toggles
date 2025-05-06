@@ -1,8 +1,19 @@
 CREATE TABLE tenants(
     tenant_id CHAR(8) PRIMARY KEY NOT NULL,
-    tenant_name VARCHAR(32) NOT NULL,
     created_on TIMESTAMP NOT NULL
 );
+
+CREATE TABLE users(
+    tenant_id CHAR(8) NOT NULL REFERENCES tenants(tenant_id) ON DELETE CASCADE,
+    user_id CHAR(32) NOT NULL,
+    email_address TEXT NOT NULL,
+    created_on TIMESTAMP NOT NULL,
+    role VARCHAR(16) NOT NULL,
+
+    PRIMARY KEY (tenant_id, user_id)
+);
+
+CREATE INDEX user_emails ON users(email_address);
 
 CREATE TABLE projects(
     tenant_id CHAR(8) NOT NULL REFERENCES tenants(tenant_id) ON DELETE CASCADE,
@@ -15,7 +26,7 @@ CREATE TABLE projects(
 );
 
 CREATE TABLE toggles(
-    tenant_id CHAR(32) NOT NULL,
+    tenant_id CHAR(8) NOT NULL,
     project_name VARCHAR(32) NOT NULL,
     toggle_name VARCHAR(32) NOT NULL,
     created_on TIMESTAMP NOT NULL,
@@ -23,7 +34,7 @@ CREATE TABLE toggles(
     variations TEXT NOT NULL,
     default_variation VARCHAR(32) NOT NULL,
 
-    PRIMARY KEY (tenant_id, project_name, toggle_name)
+    PRIMARY KEY (tenant_id, project_name, toggle_name),
     FOREIGN KEY (tenant_id, project_name) REFERENCES projects(tenant_id, project_name) ON DELETE CASCADE
 );
 
@@ -40,7 +51,7 @@ CREATE TABLE toggle_environments(
 );
 
 CREATE TABLE api_keys(
-    tenant_id CHAR(*)
+    tenant_id CHAR(8),
     project_name VARCHAR(32) NOT NULL,
     environment_name VARCHAR(32) NOT NULL,
     created_on TIMESTAMP NOT NULL,
@@ -50,4 +61,4 @@ CREATE TABLE api_keys(
     FOREIGN KEY (tenant_id, project_name) REFERENCES projects(tenant_id, project_name) ON DELETE CASCADE
 );
 
-CREATE INDEX lookup ON api_keys(token_sha256_hex);
+CREATE INDEX api_key_lookup ON api_keys(token_sha256_hex);

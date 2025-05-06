@@ -1,5 +1,6 @@
 package dev.andrewohara.toggles.users
 
+import dev.andrewohara.toggles.EmailAddress
 import dev.andrewohara.toggles.TenantId
 import dev.andrewohara.toggles.UserId
 import dev.andrewohara.utils.pagination.Page
@@ -12,15 +13,15 @@ fun inMemoryUserStorage() = object: UserStorage {
 
     private val users = ConcurrentSkipListSet(comparator)
 
-    override fun list(pageSize: Int) = Paginator<User, UserId> { cursor ->
+    override fun list(pageSize: Int) = Paginator<User, String> { cursor ->
         val page = users
             .sortedWith(comparator)
-            .dropWhile { cursor != null && it.userId <= cursor }
+            .dropWhile { cursor != null && it.userId.toString() <= cursor }
             .take(pageSize + 1)
 
         Page(
             items = page.take(pageSize),
-            next = page.drop(pageSize).firstOrNull()?.userId
+            next = page.drop(pageSize).firstOrNull()?.userId?.toString()
         )
     }
 
@@ -40,6 +41,8 @@ fun inMemoryUserStorage() = object: UserStorage {
     }
 
     override fun get(tenantId: TenantId, userId: UserId) = users.find { it.userId == userId }
+
+    override fun get(emailAddress: EmailAddress) = users.find { it.emailAddress == emailAddress }
 
     override fun plusAssign(user: User) = users.plusAssign(user)
 
