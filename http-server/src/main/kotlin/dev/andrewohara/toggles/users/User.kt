@@ -2,12 +2,12 @@ package dev.andrewohara.toggles.users
 
 import dev.andrewohara.toggles.EmailAddress
 import dev.andrewohara.toggles.TenantId
-import dev.andrewohara.toggles.UserId
+import dev.andrewohara.toggles.UniqueId
 import java.time.Instant
 
 data class User(
     val tenantId: TenantId,
-    val userId: UserId,
+    val uniqueId: UniqueId,
     val emailAddress: EmailAddress,
     val createdOn: Instant,
     val role: UserRole

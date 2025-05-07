@@ -8,6 +8,7 @@ import com.nimbusds.jose.jwk.RSAKey
 import com.nimbusds.jose.jwk.source.ImmutableJWKSet
 import com.nimbusds.jwt.JWTClaimsSet
 import com.nimbusds.jwt.SignedJWT
+import dev.andrewohara.toggles.UniqueId.Companion.parse
 import dev.andrewohara.toggles.http.client.TogglesHttpClient
 import dev.andrewohara.toggles.http.server.toHttpServer
 import dev.andrewohara.toggles.users.UserAuthorizer
@@ -20,6 +21,7 @@ import java.security.interfaces.RSAPublicKey
 import java.time.Clock
 import java.time.ZoneId
 import java.time.ZoneOffset
+import kotlin.random.Random
 
 private const val AUDIENCE = "toggles-test"
 

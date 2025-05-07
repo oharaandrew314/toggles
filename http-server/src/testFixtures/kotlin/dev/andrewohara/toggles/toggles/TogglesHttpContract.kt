@@ -1,14 +1,12 @@
 package dev.andrewohara.toggles.toggles
 
 import dev.andrewohara.toggles.ServerContractBase
-import dev.andrewohara.toggles.Storage
 import dev.andrewohara.toggles.dev
 import dev.andrewohara.toggles.devAndProd
 import dev.andrewohara.toggles.http.TogglesErrorDto
 import dev.andrewohara.toggles.http.TogglesPageDto
 import dev.andrewohara.toggles.http.server.toDto
 import dev.andrewohara.toggles.idp1Email1
-import dev.andrewohara.toggles.inMemory
 import dev.andrewohara.toggles.mostlyNew
 import dev.andrewohara.toggles.mostlyOld
 import dev.andrewohara.toggles.oldNewData
@@ -266,8 +264,4 @@ abstract class TogglesHttpContract: ServerContractBase() {
             next = null
         )
     }
-}
-
-class InMemoryTogglesHttpTest: TogglesHttpContract() {
-    override fun createStorage() = Storage.inMemory()
 }

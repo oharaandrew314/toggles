@@ -5,7 +5,7 @@ import dev.andrewohara.toggles.EnvironmentName
 import dev.andrewohara.toggles.ProjectName
 import dev.andrewohara.toggles.TenantId
 import dev.andrewohara.toggles.ToggleName
-import dev.andrewohara.toggles.UserId
+import dev.andrewohara.toggles.UniqueId
 import org.http4k.connect.amazon.dynamodb.model.Attribute
 import org.http4k.connect.amazon.dynamodb.model.value
 import org.http4k.lens.BiDiMapping
@@ -27,5 +27,5 @@ internal val ProjectName.Companion.attribute get() = Attribute.value(ProjectName
 internal val projectRefAttr = Attribute.string().map(projectRefMapping).required("projectRef")
 internal val ToggleName.Companion.attribute get() = Attribute.value(ToggleName).required("toggleName")
 internal val EnvironmentName.Companion.attribute get() = Attribute.value(EnvironmentName).required("environmentName")
-internal val UserId.Companion.attribute get() = Attribute.value(UserId).required("userId")
 internal val EmailAddress.Companion.attribute get() = Attribute.value(EmailAddress).required("emailAddress")
+internal val UniqueId.Companion.attribute get() = Attribute.value(UniqueId).required("uniqueId")

@@ -5,12 +5,12 @@ CREATE TABLE tenants(
 
 CREATE TABLE users(
     tenant_id CHAR(8) NOT NULL REFERENCES tenants(tenant_id) ON DELETE CASCADE,
-    user_id CHAR(32) NOT NULL,
+    unique_id CHAR(32) NOT NULL UNIQUE,
     email_address TEXT NOT NULL,
     created_on TIMESTAMP NOT NULL,
     role VARCHAR(16) NOT NULL,
 
-    PRIMARY KEY (tenant_id, user_id)
+    PRIMARY KEY (tenant_id, unique_id)
 );
 
 CREATE INDEX user_emails ON users(email_address);

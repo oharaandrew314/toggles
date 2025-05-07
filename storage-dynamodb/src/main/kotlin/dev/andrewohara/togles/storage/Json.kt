@@ -10,7 +10,6 @@ import dev.andrewohara.toggles.SubjectId
 import dev.andrewohara.toggles.TenantId
 import dev.andrewohara.toggles.ToggleName
 import dev.andrewohara.toggles.UniqueId
-import dev.andrewohara.toggles.UserId
 import dev.andrewohara.toggles.VariationName
 import dev.andrewohara.toggles.Weight
 import org.http4k.format.ConfigurableMoshi
@@ -39,7 +38,6 @@ internal val dynamoJson = Moshi.Builder()
     .value(UniqueId)
     .value(ApiKey)
     .value(TenantId)
-    .value(UserId)
     .value(EmailAddress)
     .done()
     .let { ConfigurableMoshi(it) }

@@ -3,7 +3,9 @@ package dev.andrewohara.toggles.storage
 import dev.andrewohara.toggles.projects.ProjectStorageContract
 import dev.andrewohara.toggles.Storage
 import dev.andrewohara.toggles.apikeys.ApiKeysStorageContract
+import dev.andrewohara.toggles.tenants.TenantStorageContract
 import dev.andrewohara.toggles.toggles.ToggleStorageContract
+import dev.andrewohara.toggles.users.UserStorageContract
 import dev.andrewohara.togles.storage.dynamoDb
 import org.http4k.aws.AwsCredentials
 import org.http4k.connect.amazon.core.model.Region
@@ -40,10 +42,10 @@ class DynamoApiKeyStorageTest: ApiKeysStorageContract() {
     override fun createStorage() = testDynamoStorage(dynamo.debug())
 }
 
-//class DynamoUserStorageTest: ProjectStorageContract() {
-//    override fun createStorage() = testDynamoStorage()
-//}
+class DynamoUserStorageTest: UserStorageContract() {
+    override fun createStorage() = testDynamoStorage()
+}
 
-//class DynamoTenantStorageTest: ProjectStorageContract() {
-//    override fun createStorage() = testDynamoStorage()
-//}
+class DynamoTenantStorageTest: TenantStorageContract() {
+    override fun createStorage() = testDynamoStorage()
+}

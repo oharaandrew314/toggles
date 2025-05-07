@@ -5,7 +5,7 @@ import dev.andrewohara.toggles.ProjectName
 import dev.andrewohara.toggles.ToggleName
 import dev.andrewohara.toggles.Storage
 import dev.andrewohara.toggles.TenantId
-import dev.andrewohara.toggles.UserId
+import dev.andrewohara.toggles.UniqueId
 import dev.forkhandles.result4k.asFailure
 import dev.forkhandles.result4k.flatMapFailure
 import dev.forkhandles.result4k.onFailure
@@ -50,9 +50,9 @@ fun Storage.Companion.dynamoDb(
     )
 
     val users = dynamoDb.tableMapper(
-        usersTableName, Primary<DynamoUser, TenantId, UserId>(
+        usersTableName, Primary<DynamoUser, TenantId, UniqueId>(
             hashKeyAttribute = TenantId.attribute,
-            sortKeyAttribute = UserId.attribute,
+            sortKeyAttribute = UniqueId.attribute,
             lens = dynamoJson.autoDynamoLens()
         )
     )

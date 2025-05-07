@@ -1,7 +1,6 @@
 package dev.andrewohara.toggles.projects
 
 import dev.andrewohara.toggles.ServerContractBase
-import dev.andrewohara.toggles.Storage
 import dev.andrewohara.toggles.apikeys.generateApiKey
 import dev.andrewohara.toggles.dev
 import dev.andrewohara.toggles.devAndProd
@@ -10,7 +9,6 @@ import dev.andrewohara.toggles.http.ProjectsPageDto
 import dev.andrewohara.toggles.http.TogglesErrorDto
 import dev.andrewohara.toggles.http.server.toDto
 import dev.andrewohara.toggles.idp1Email1
-import dev.andrewohara.toggles.inMemory
 import dev.andrewohara.toggles.oldNewData
 import dev.andrewohara.toggles.projectName1
 import dev.andrewohara.toggles.projectName2
@@ -32,7 +30,6 @@ import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-
 
 abstract class ProjectsHttpContract: ServerContractBase() {
 
@@ -126,8 +123,4 @@ abstract class ProjectsHttpContract: ServerContractBase() {
             message = "Project not empty: $projectName1"
         )
     }
-}
-
-class InMemoryProjectsHttpTest: ProjectsHttpContract() {
-    override fun createStorage() = Storage.inMemory()
 }

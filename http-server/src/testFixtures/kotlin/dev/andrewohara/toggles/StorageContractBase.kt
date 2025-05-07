@@ -1,8 +1,10 @@
 package dev.andrewohara.toggles
 
+import dev.andrewohara.toggles.UniqueId.Companion.parse
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import java.time.Instant
+import java.util.Base64
 import kotlin.random.Random
 
 abstract class StorageContractBase {
@@ -35,4 +37,9 @@ abstract class StorageContractBase {
             tenants -= tenant
         }
     }
+
+    private val base64 = Base64.getEncoder()
+    fun nextUniqueId() = base64.encodeToString(random.nextBytes(UniqueId.LENGTH))
+        .take(UniqueId.LENGTH)
+        .let(::parse)
 }

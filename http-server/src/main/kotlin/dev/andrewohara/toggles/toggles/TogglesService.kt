@@ -7,20 +7,15 @@ import dev.andrewohara.toggles.ToggleAlreadyExists
 import dev.andrewohara.toggles.ToggleName
 import dev.andrewohara.toggles.ToggleState
 import dev.andrewohara.toggles.TogglesApp
-import dev.andrewohara.toggles.UniqueId
+import dev.andrewohara.toggles.createUniqueId
 import dev.andrewohara.utils.result.failIf
 import dev.forkhandles.result4k.flatMap
 import dev.forkhandles.result4k.map
 import dev.forkhandles.result4k.peek
-import java.security.MessageDigest
 
 @OptIn(ExperimentalStdlibApi::class)
 private fun TogglesApp.createState(toggle: Toggle, environment: EnvironmentName) = ToggleState(
-    uniqueId = MessageDigest.getInstance("MD5").run {
-        update(secretKey)
-        val bytes = digest("${toggle.tenantId}/${toggle.projectName}/${toggle.toggleName}".toByteArray())
-        UniqueId.of(bytes.toHexString())
-    },
+    uniqueId = createUniqueId(toggle.tenantId, toggle.projectName, toggle.toggleName),
     variations = toggle.environments[environment]?.weights ?: emptyMap(),
     overrides = toggle.environments[environment]?.overrides ?: emptyMap(),
     defaultVariation = toggle.defaultVariation,

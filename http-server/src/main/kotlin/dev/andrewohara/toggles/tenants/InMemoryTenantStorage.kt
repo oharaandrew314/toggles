@@ -14,7 +14,7 @@ fun inMemoryTenantStorage() = object: TenantStorage {
     override fun list(pageSize: Int) = Paginator<Tenant, TenantId> { cursor ->
         val page = tenants
             .sortedWith(comparator)
-            .dropWhile { cursor != null && it.tenantId <= cursor }
+            .dropWhile { cursor != null && it.tenantId < cursor }
             .take(pageSize + 1)
 
         Page(

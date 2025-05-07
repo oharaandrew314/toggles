@@ -1,6 +1,5 @@
 package dev.andrewohara.toggles
 
-import dev.forkhandles.values.Base16StringValueFactory
 import dev.forkhandles.values.Base64StringValueFactory
 import dev.forkhandles.values.ComparableValue
 import dev.forkhandles.values.IntValue
@@ -35,18 +34,7 @@ class TenantId private constructor(value: String): StringValue(value), Comparabl
     companion object: ResourceIdValueFactory<TenantId>(::TenantId, 8)
 }
 
-class UserId private constructor(value: String): StringValue(value), Comparable<UserId> {
-    override fun compareTo(other: UserId) = show(this).compareTo(show(other))
-
-    companion object: Base16StringValueFactory<UserId>(
-        fn = ::UserId,
-        validation = 32.exactLength,
-        parseFn = String::uppercase,
-        showFn = String::lowercase
-    )
-}
-
-class EmailAddress private constructor(value: String): StringValue(value), ComparableValue<EmailAddress, String> {
+class EmailAddress private constructor(value: String): StringValue(value) {
     companion object: StringValueFactory<EmailAddress>(::EmailAddress)
 }
 
@@ -83,6 +71,12 @@ class ApiKey private constructor(value: String): StringValue(value, Maskers.hidd
     companion object: ResourceIdValueFactory<ApiKey>(::ApiKey, 16)
 }
 
-class UniqueId private constructor(value: String): StringValue(value) {
-    companion object: Base64StringValueFactory<UniqueId>(::UniqueId, 8.exactLength)
+class UniqueId private constructor(value: String): StringValue(value), ComparableValue<UniqueId, String> {
+    companion object: Base64StringValueFactory<UniqueId>(
+        fn = ::UniqueId,
+        validation = 8.exactLength,
+        parseFn = { it.trim('=') }
+    ) {
+        const val LENGTH = 8
+    }
 }
