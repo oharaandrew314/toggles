@@ -3,7 +3,9 @@ package dev.andrewohara.togles.storage
 import dev.andrewohara.toggles.EnvironmentName
 import dev.andrewohara.toggles.ProjectName
 import dev.andrewohara.toggles.ToggleName
-import dev.andrewohara.toggles.storage.Storage
+import dev.andrewohara.toggles.Storage
+import dev.andrewohara.toggles.TenantId
+import dev.andrewohara.toggles.UniqueId
 import dev.forkhandles.result4k.asFailure
 import dev.forkhandles.result4k.flatMapFailure
 import dev.forkhandles.result4k.onFailure
@@ -19,29 +21,46 @@ fun Storage.Companion.dynamoDb(
     projectsTableName: TableName,
     togglesTableName: TableName,
     apiKeysTableName: TableName,
+    usersTableName: TableName,
+    tenantsTableName: TableName,
     autoCreate: Boolean = false
 ): Storage {
     val projects = dynamoDb.tableMapper(
-        projectsTableName, Primary<DynamoProject, ProjectName, Unit>(
-            hashKeyAttribute = ProjectName.attribute,
-            sortKeyAttribute = null,
-            lens = togglesJson.autoDynamoLens()
+        projectsTableName, Primary<DynamoProject, TenantId, ProjectName>(
+            hashKeyAttribute = TenantId.attribute,
+            sortKeyAttribute = ProjectName.attribute,
+            lens = dynamoJson.autoDynamoLens()
         )
     )
 
     val toggles = dynamoDb.tableMapper(
-        togglesTableName, Primary<DynamoToggle, ProjectName, ToggleName>(
-            hashKeyAttribute = ProjectName.attribute,
+        togglesTableName, Primary<DynamoToggle, ProjectRef, ToggleName>(
+            hashKeyAttribute = projectRefAttr,
             sortKeyAttribute = ToggleName.attribute,
-            lens = togglesJson.autoDynamoLens()
+            lens = dynamoJson.autoDynamoLens()
         )
     )
 
     val apiKeys = dynamoDb.tableMapper(
-        apiKeysTableName, Primary<DynamoApiKey, ProjectName, EnvironmentName>(
-            hashKeyAttribute = ProjectName.attribute,
+        apiKeysTableName, Primary<DynamoApiKey, ProjectRef, EnvironmentName>(
+            hashKeyAttribute = projectRefAttr,
             sortKeyAttribute = EnvironmentName.attribute,
-            lens = togglesJson.autoDynamoLens()
+            lens = dynamoJson.autoDynamoLens()
+        )
+    )
+
+    val users = dynamoDb.tableMapper(
+        usersTableName, Primary<DynamoUser, TenantId, UniqueId>(
+            hashKeyAttribute = TenantId.attribute,
+            sortKeyAttribute = UniqueId.attribute,
+            lens = dynamoJson.autoDynamoLens()
+        )
+    )
+
+    val tenants = dynamoDb.tableMapper(
+        tenantsTableName, Primary<DynamoTenant, TenantId, Unit>(
+            hashKeyAttribute = TenantId.attribute,
+            lens = dynamoJson.autoDynamoLens()
         )
     )
 
@@ -54,10 +73,18 @@ fun Storage.Companion.dynamoDb(
     dynamoDb.describeTable(apiKeysTableName)
         .flatMapFailure { if (autoCreate) apiKeys.createTable(DynamoApiKey.lookupIndex) else it.asFailure() }
         .onFailure { it.reason.throwIt() }
+    dynamoDb.describeTable(usersTableName)
+        .flatMapFailure { if (autoCreate) users.createTable(DynamoUser.emailIndex) else it.asFailure() }
+        .onFailure { it.reason.throwIt() }
+    dynamoDb.describeTable(tenantsTableName)
+        .flatMapFailure { if (autoCreate) tenants.createTable() else it.asFailure() }
+        .onFailure { it.reason.throwIt() }
 
     return Storage(
         projects = dynamoProjectStorage(projects),
         toggles = dynamoToggleStorage(toggles),
-        apiKeys = dynamoApiKeyStorage(apiKeys)
+        apiKeys = dynamoApiKeyStorage(apiKeys),
+        users = dynamoUserStorage(users),
+        tenants = dynamoTenantsStorage(tenants)
     )
 }

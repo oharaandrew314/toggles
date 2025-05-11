@@ -2,9 +2,10 @@ package dev.andrewohara.togles.storage
 
 import dev.andrewohara.toggles.EnvironmentName
 import dev.andrewohara.toggles.ProjectName
+import dev.andrewohara.toggles.TenantId
 import dev.andrewohara.toggles.apikeys.ApiKeyMeta
-import dev.andrewohara.toggles.apikeys.TokenSha256
-import dev.andrewohara.toggles.storage.ApiKeyStorage
+import dev.andrewohara.toggles.apikeys.ApiKeyHash
+import dev.andrewohara.toggles.apikeys.ApiKeyStorage
 import dev.andrewohara.utils.pagination.Page
 import dev.andrewohara.utils.pagination.Paginator
 import org.http4k.connect.amazon.dynamodb.mapper.DynamoDbTableMapper
@@ -18,16 +19,20 @@ import se.ansman.kotshi.JsonSerializable
 import java.time.Instant
 
 fun dynamoApiKeyStorage(
-    table: DynamoDbTableMapper<DynamoApiKey, ProjectName, EnvironmentName>
+    table: DynamoDbTableMapper<DynamoApiKey, ProjectRef, EnvironmentName>
 ) = object : ApiKeyStorage {
     override fun list(
+        tenantId: TenantId,
         projectName: ProjectName,
         pageSize: Int,
     ) = Paginator<ApiKeyMeta, EnvironmentName> { cursor ->
         val page = table.primaryIndex().queryPage(
-           HashKey = projectName,
+           HashKey = ProjectRef(tenantId, projectName),
            ExclusiveStartKey = cursor?.let {
-               Key(ProjectName.attribute of projectName, EnvironmentName.attribute of cursor)
+               Key(
+                   projectRefAttr of ProjectRef(tenantId, projectName),
+                   EnvironmentName.attribute of cursor
+               )
            },
            Limit = pageSize
         )
@@ -38,22 +43,22 @@ fun dynamoApiKeyStorage(
         )
     }
 
-    override fun get(projectName: ProjectName, environment: EnvironmentName) =
-        table[projectName, environment]?.toModel()
+    override fun get(tenantId: TenantId, projectName: ProjectName, environment: EnvironmentName) =
+        table[ProjectRef(tenantId, projectName), environment]?.toModel()
 
-    override fun set(meta: ApiKeyMeta, tokenSha256: TokenSha256) = table.plusAssign(DynamoApiKey(
-        projectName = meta.projectName,
-        environment = meta.environment,
+    override fun set(meta: ApiKeyMeta, apiKeyHash: ApiKeyHash) = table.plusAssign(DynamoApiKey(
+        projectRef = projectRefMapping(ProjectRef(meta.tenantId, meta.projectName)),
+        environmentName = meta.environment,
         createdOn = meta.createdOn,
-        hash = tokenSha256.toString()
+        hash = apiKeyHash.toString()
     ))
 
     override fun minusAssign(meta: ApiKeyMeta) =
-        table.delete(meta.projectName, meta.environment)
+        table.delete(ProjectRef(meta.tenantId, meta.projectName), meta.environment)
 
-    override fun get(tokenSha256: TokenSha256) = table
+    override fun get(apiKeyHash: ApiKeyHash) = table
         .index(DynamoApiKey.lookupIndex)
-        .query(tokenSha256.toString())
+        .query(apiKeyHash.toString())
         .firstOrNull()
         ?.toModel()
 }
@@ -61,8 +66,8 @@ fun dynamoApiKeyStorage(
 
 @JsonSerializable
 data class DynamoApiKey(
-    val projectName: ProjectName,
-    val environment: EnvironmentName,
+    val projectRef: String,
+    val environmentName: EnvironmentName,
     val createdOn: Instant,
     val hash: String
 ) {
@@ -71,13 +76,14 @@ data class DynamoApiKey(
             indexName = IndexName.of("lookup"),
             hashKeyAttribute = Attribute.string().required("hash"),
             sortKeyAttribute = null,
-            lens = togglesJson.autoDynamoLens()
+            lens = dynamoJson.autoDynamoLens()
         )
     }
 }
 
 private fun DynamoApiKey.toModel() = ApiKeyMeta(
-    projectName = projectName,
-    environment = environment,
+    tenantId = projectRefMapping(projectRef).tenantId,
+    projectName = projectRefMapping(projectRef).projectName,
+    environment = environmentName,
     createdOn = createdOn
 )

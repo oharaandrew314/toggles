@@ -1,8 +1,10 @@
 package dev.andrewohara.toggles.storage
 
-import dev.andrewohara.toggles.ApiKeysStorageContract
-import dev.andrewohara.toggles.ProjectStorageContract
-import dev.andrewohara.toggles.ToggleStorageContract
+import dev.andrewohara.toggles.apikeys.ApiKeysStorageContract
+import dev.andrewohara.toggles.projects.ProjectStorageContract
+import dev.andrewohara.toggles.tenants.TenantStorageContract
+import dev.andrewohara.toggles.toggles.ToggleStorageContract
+import dev.andrewohara.toggles.users.UserStorageContract
 import org.testcontainers.containers.MySQLContainer
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
@@ -34,6 +36,26 @@ class MysqlProjectStorageTest: ToggleStorageContract() {
 
 @Testcontainers
 class MysqlApiKeyStorageTest: ApiKeysStorageContract() {
+
+    companion object {
+        @Container @JvmStatic val mysql = mysql()
+    }
+
+    override fun createStorage() = mysql.toStorage()
+}
+
+@Testcontainers
+class MysqlTenantStorageTest: TenantStorageContract() {
+
+    companion object {
+        @Container @JvmStatic val mysql = mysql()
+    }
+
+    override fun createStorage() = mysql.toStorage()
+}
+
+@Testcontainers
+class MysqlUserStorageTest: UserStorageContract() {
 
     companion object {
         @Container @JvmStatic val mysql = mysql()

@@ -2,22 +2,25 @@ package dev.andrewohara.toggles.http.server
 
 import dev.andrewohara.toggles.ApiKeyNotFound
 import dev.andrewohara.toggles.EnvironmentInUse
-import dev.andrewohara.toggles.Project
+import dev.andrewohara.toggles.projects.Project
 import dev.andrewohara.toggles.ProjectAlreadyExists
-import dev.andrewohara.toggles.ProjectCreateData
+import dev.andrewohara.toggles.projects.ProjectCreateData
 import dev.andrewohara.toggles.ProjectName
 import dev.andrewohara.toggles.ProjectNotEmpty
 import dev.andrewohara.toggles.ProjectNotFound
-import dev.andrewohara.toggles.ProjectUpdateData
-import dev.andrewohara.toggles.Toggle
+import dev.andrewohara.toggles.TenantNotFound
+import dev.andrewohara.toggles.projects.ProjectUpdateData
+import dev.andrewohara.toggles.toggles.Toggle
 import dev.andrewohara.toggles.ToggleAlreadyExists
-import dev.andrewohara.toggles.ToggleCreateData
-import dev.andrewohara.toggles.ToggleEnvironment
+import dev.andrewohara.toggles.toggles.ToggleCreateData
+import dev.andrewohara.toggles.toggles.ToggleEnvironment
 import dev.andrewohara.toggles.ToggleName
 import dev.andrewohara.toggles.ToggleNotFound
 import dev.andrewohara.toggles.ToggleState
-import dev.andrewohara.toggles.ToggleUpdateData
+import dev.andrewohara.toggles.toggles.ToggleUpdateData
 import dev.andrewohara.toggles.TogglesError
+import dev.andrewohara.toggles.UserAlreadyExists
+import dev.andrewohara.toggles.UserNotFound
 import dev.andrewohara.toggles.http.ProjectCreateDataDto
 import dev.andrewohara.toggles.http.ProjectDto
 import dev.andrewohara.toggles.http.ProjectUpdateDataDto
@@ -64,6 +67,9 @@ fun TogglesError.toDto() = TogglesErrorDto(
         is ToggleAlreadyExists -> "Toggle already exists: $projectName/$toggleName"
         is EnvironmentInUse -> "Environment in use: $projectName/$environmentName"
         is ApiKeyNotFound -> "Api Key not found: $projectName/$environmentName"
+        is TenantNotFound -> "Tenant not found: $tenantId"
+        is UserNotFound -> "User not found: $userId"
+        is UserAlreadyExists -> "User already exists: $tenantId/$emailAddress"
     }
 )
 
@@ -75,7 +81,6 @@ fun TogglesError.toResponse() = Response(when(this) {
 fun Toggle.toDto() = ToggleDto(
     projectName = projectName,
     toggleName = toggleName,
-    uniqueId = uniqueId,
     createdOn = createdOn,
     updatedOn = updatedOn,
     variations = variations,

@@ -1,5 +1,6 @@
 package dev.andrewohara.toggles.storage
 
+import dev.andrewohara.toggles.Storage
 import org.flywaydb.core.Flyway
 import javax.sql.DataSource
 
@@ -19,6 +20,8 @@ fun Storage.Companion.jdbc(
     return Storage(
         projects = jdbcProjectStorage(dataSource),
         toggles = jdbcToggleStorage(dataSource),
-        apiKeys = jdbcApiKeyStorage(dataSource)
+        apiKeys = jdbcApiKeyStorage(dataSource),
+        users = jdbcUserStorage(dataSource),
+        tenants = jdbcTenantStorage(dataSource)
     )
 }
