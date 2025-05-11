@@ -23,4 +23,3 @@ Feature Flags Server and Kotlin Library
 - file storage
 - readme should include bucketing spec
 - readme should include required flyway drivers
-- email sender (smtp, ses)

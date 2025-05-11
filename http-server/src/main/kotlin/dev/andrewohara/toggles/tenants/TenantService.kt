@@ -24,13 +24,18 @@ fun TogglesApp.inviteUser(tenantId: TenantId, emailAddress: EmailAddress, role: 
     .map { User(tenantId, createUniqueId(emailAddress), emailAddress, clock.instant(), role) }
     .peek(storage.users::plusAssign)
 
+// TODO authorization
 fun TogglesApp.updateUserRole(tenantId: TenantId, userId: UniqueId, role: UserRole) = storage
     .users.getOrFail(tenantId, userId)
     .map { it.copy(role = role) }
     .peek(storage.users::plusAssign)
 
+// TODO authorization
+// TODO can't delete last admin of tenant; need to delete tenant instead
 fun TogglesApp.removeUser(tenantId: TenantId, userId: UniqueId) = storage
     .users.getOrFail(tenantId, userId)
     .peek(storage.users::minusAssign)
+
+// TODO delete tenant; requires all projects and users to be deleted
 
 
