@@ -9,6 +9,16 @@ allprojects {
     repositories {
         mavenCentral()
     }
+
+    tasks.register<Test>("unittest") {
+        description = "Runs tests excluding those annotated with @TestContainers"
+        group = "verification"
+
+        useJUnitPlatform {
+            excludeTags("org.testcontainers.junit.jupiter.Testcontainers")
+        }
+    }
+
 }
 
 subprojects {

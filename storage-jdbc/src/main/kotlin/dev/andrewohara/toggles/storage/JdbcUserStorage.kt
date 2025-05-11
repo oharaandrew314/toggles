@@ -16,8 +16,8 @@ import javax.sql.DataSource
 private const val LIST_BY_TENANT = """
     SELECT *
     FROM users
-    WHERE tenant_id = ? AND unique_id > ?
-    ORDER BY user_id ASC
+    WHERE tenant_id = ? AND unique_id >= ?
+    ORDER BY unique_id ASC
     LIMIT ?
 """
 
@@ -66,7 +66,7 @@ internal fun jdbcUserStorage(dataSource: DataSource) = object: UserStorage {
 
     override fun get(tenantId: TenantId, uniqueId: UniqueId) = dataSource.connection.use { conn ->
         conn.prepareStatement(GET).use { stmt ->
-            stmt.setString(1, uniqueId.value)
+            stmt.setString(1, tenantId.value)
             stmt.setString(2, uniqueId.value)
 
             stmt.executeQuery().use { rs ->
@@ -113,7 +113,7 @@ internal fun jdbcUserStorage(dataSource: DataSource) = object: UserStorage {
 
 private fun ResultSet.toUser() = User(
     tenantId = TenantId.parse(getString("tenant_id")),
-    uniqueId = UniqueId.parse(getString("user_id")),
+    uniqueId = UniqueId.parse(getString("unique_id")),
     emailAddress = EmailAddress.parse(getString("email_address")),
     createdOn = getTimestamp("created_on").toInstant(),
     role = UserRole.valueOf(getString("role"))

@@ -5,8 +5,8 @@ CREATE TABLE tenants(
 
 CREATE TABLE users(
     tenant_id CHAR(8) NOT NULL REFERENCES tenants(tenant_id) ON DELETE CASCADE,
-    unique_id CHAR(32) NOT NULL UNIQUE,
-    email_address TEXT NOT NULL,
+    unique_id CHAR(8) NOT NULL UNIQUE,
+    email_address VARCHAR(128) NOT NULL,
     created_on TIMESTAMP NOT NULL,
     role VARCHAR(16) NOT NULL,
 

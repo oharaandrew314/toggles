@@ -34,6 +34,10 @@ abstract class StorageContractBase {
                 projects -= project
             }
 
+            for (user in users.list(tenant.tenantId, 100)) {
+                users -= user
+            }
+
             tenants -= tenant
         }
     }

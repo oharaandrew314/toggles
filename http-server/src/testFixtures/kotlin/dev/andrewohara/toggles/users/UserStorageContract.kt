@@ -6,6 +6,7 @@ import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
+import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -40,7 +41,7 @@ abstract class UserStorageContract:  StorageContractBase() {
 
     @Test
     fun `list users - all`() {
-        storage.users.list(tenant1.tenantId, 100).toList()
+        storage.users.list(tenant1.tenantId, 2).toList()
             .shouldContainExactlyInAnyOrder(user1, user2, user3)
     }
 
@@ -53,5 +54,40 @@ abstract class UserStorageContract:  StorageContractBase() {
         val page2 = storage.users.list(tenant1.tenantId, 2)[page1.next]
         page2.items.shouldHaveSize(1)
         page2.next.shouldBeNull()
+    }
+
+    @Test
+    fun `get user - found`() {
+        storage.users[user1.tenantId, user1.uniqueId] shouldBe user1
+    }
+
+    @Test
+    fun `get user - not found`() {
+        storage.users[tenant2.tenantId, user1.uniqueId].shouldBeNull()
+    }
+
+    @Test
+    fun `get user by email - found`() {
+        storage.users[user4.emailAddress] shouldBe user4
+    }
+
+    @Test
+    fun `get user by email - not found`() {
+        storage.users[EmailAddress.of("not@found.com")].shouldBeNull()
+    }
+
+    @Test
+    fun `delete user - found`() {
+        storage.users -= user1
+
+        storage.users[user1.tenantId, user1.uniqueId].shouldBeNull()
+        storage.users.list(tenant1.tenantId, 100).toList()
+            .shouldContainExactlyInAnyOrder(user2, user3)
+    }
+
+    @Test
+    fun `delete user - not found`() {
+        storage.users -= user1
+        storage.users -= user1
     }
 }

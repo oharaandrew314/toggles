@@ -27,7 +27,7 @@ internal fun dynamoUserStorage(
     ) = Paginator<User, UniqueId> { cursor ->
         val page = table.primaryIndex().queryPage(
             HashKey = tenantId,
-            ExclusiveStartKey = cursor?.let { Key(UniqueId.attribute of cursor) },
+            ExclusiveStartKey = cursor?.let { Key(TenantId.attribute of tenantId,UniqueId.attribute of cursor) },
             Limit = pageSize
         )
 
