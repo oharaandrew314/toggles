@@ -1,4 +1,4 @@
-package dev.andrewohara.toggles.http
+package dev.andrewohara.toggles.toggles.http
 
 import dev.andrewohara.toggles.SubjectId
 import dev.andrewohara.toggles.VariationName

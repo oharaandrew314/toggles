@@ -9,16 +9,6 @@ allprojects {
     repositories {
         mavenCentral()
     }
-
-    tasks.register<Test>("unittest") {
-        description = "Runs tests excluding those annotated with @TestContainers"
-        group = "verification"
-
-        useJUnitPlatform {
-            excludeTags("org.testcontainers.junit.jupiter.Testcontainers")
-        }
-    }
-
 }
 
 subprojects {
@@ -38,7 +28,10 @@ subprojects {
     }
 
     tasks.test {
-        useJUnitPlatform()
+        useJUnitPlatform {
+            val tags = project.findProperty("excludeTags")?.toString()?.split(",").orEmpty()
+            excludeTags.addAll(tags)
+        }
     }
 
     kotlin {

@@ -8,6 +8,8 @@ import dev.andrewohara.toggles.ToggleName
 import dev.andrewohara.toggles.ToggleState
 import dev.andrewohara.toggles.TogglesApp
 import dev.andrewohara.toggles.createUniqueId
+import dev.andrewohara.toggles.users.User
+import dev.andrewohara.toggles.users.http.requireAdminOrDeveloper
 import dev.andrewohara.utils.result.failIf
 import dev.forkhandles.result4k.flatMap
 import dev.forkhandles.result4k.map
@@ -34,10 +36,11 @@ fun TogglesApp.getState(tenantId: TenantId, projectName: ProjectName, toggleName
     .flatMap { storage.toggles.getOrFail(tenantId, projectName, toggleName) }
     .map { createState(it,environmentName) }
 
-fun TogglesApp.createToggle(tenantId: TenantId, projectName: ProjectName, data: ToggleCreateData) = storage
-    .projects.getOrFail(tenantId, projectName)
-    .failIf({ storage.toggles[tenantId, projectName, data.toggleName] != null}, { ToggleAlreadyExists(projectName, data.toggleName) })
-    .map { data.toToggle(tenantId, projectName, clock.instant()) }
+fun TogglesApp.createToggle(principal: User, projectName: ProjectName, data: ToggleCreateData) = principal
+    .requireAdminOrDeveloper()
+    .flatMap { storage.projects.getOrFail(principal.tenantId, projectName) }
+    .failIf({ storage.toggles[principal.tenantId, projectName, data.toggleName] != null}, { ToggleAlreadyExists(projectName, data.toggleName) })
+    .map { data.toToggle(principal.tenantId, projectName, clock.instant()) }
     .peek(storage.toggles::plusAssign)
 
 fun TogglesApp.updateToggle(tenantId: TenantId, projectName: ProjectName, toggleName: ToggleName, data: ToggleUpdateData) = storage
@@ -46,7 +49,8 @@ fun TogglesApp.updateToggle(tenantId: TenantId, projectName: ProjectName, toggle
     .map { it.update(data, clock.instant()) }
     .peek(storage.toggles::plusAssign)
 
-fun TogglesApp.deleteToggle(tenantId: TenantId, projectName: ProjectName, toggleName: ToggleName) = storage
-    .projects.getOrFail(tenantId, projectName)
-    .flatMap { storage.toggles.getOrFail(tenantId, projectName, toggleName) }
+fun TogglesApp.deleteToggle(principal: User, projectName: ProjectName, toggleName: ToggleName) = principal
+    .requireAdminOrDeveloper()
+    .flatMap { storage.projects.getOrFail(principal.tenantId, projectName) }
+    .flatMap { storage.toggles.getOrFail(principal.tenantId, projectName, toggleName) }
     .peek(storage.toggles::minusAssign)

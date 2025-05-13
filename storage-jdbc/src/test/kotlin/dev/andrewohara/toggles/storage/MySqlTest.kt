@@ -5,6 +5,7 @@ import dev.andrewohara.toggles.projects.ProjectStorageContract
 import dev.andrewohara.toggles.tenants.TenantStorageContract
 import dev.andrewohara.toggles.toggles.ToggleStorageContract
 import dev.andrewohara.toggles.users.UserStorageContract
+import org.junit.jupiter.api.Tag
 import org.testcontainers.containers.MySQLContainer
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
@@ -14,6 +15,7 @@ import java.util.UUID
 private fun mysql(): MySQLContainer<*> = MySQLContainer("mysql:8.4.5")
     .withDatabaseName(UUID.randomUUID().toString())
 
+@Tag("slow")
 @Testcontainers
 class MysqlTogglesStorageTest: ProjectStorageContract() {
 
@@ -24,6 +26,7 @@ class MysqlTogglesStorageTest: ProjectStorageContract() {
     override fun createStorage() = mysql.toStorage()
 }
 
+@Tag("slow")
 @Testcontainers
 class MysqlProjectStorageTest: ToggleStorageContract() {
 
@@ -34,6 +37,7 @@ class MysqlProjectStorageTest: ToggleStorageContract() {
     override fun createStorage() = mysql.toStorage()
 }
 
+@Tag("slow")
 @Testcontainers
 class MysqlApiKeyStorageTest: ApiKeysStorageContract() {
 
@@ -44,6 +48,7 @@ class MysqlApiKeyStorageTest: ApiKeysStorageContract() {
     override fun createStorage() = mysql.toStorage()
 }
 
+@Tag("slow")
 @Testcontainers
 class MysqlTenantStorageTest: TenantStorageContract() {
 
@@ -54,6 +59,7 @@ class MysqlTenantStorageTest: TenantStorageContract() {
     override fun createStorage() = mysql.toStorage()
 }
 
+@Tag("slow")
 @Testcontainers
 class MysqlUserStorageTest: UserStorageContract() {
 

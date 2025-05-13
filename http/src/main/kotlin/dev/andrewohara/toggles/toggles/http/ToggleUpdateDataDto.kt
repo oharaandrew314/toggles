@@ -1,9 +1,10 @@
-package dev.andrewohara.toggles.http
+package dev.andrewohara.toggles.toggles.http
 
 import dev.andrewohara.toggles.EnvironmentName
 import dev.andrewohara.toggles.SubjectId
 import dev.andrewohara.toggles.VariationName
 import dev.andrewohara.toggles.Weight
+import dev.andrewohara.toggles.http.togglesJson
 import se.ansman.kotshi.JsonSerializable
 
 @JsonSerializable
@@ -17,25 +18,25 @@ data class ToggleUpdateDataDto(
 
         val sample = ToggleUpdateDataDto(
             variations = listOf(
-                VariationName.of("off"),
-                VariationName.of("on")
+                VariationName.Companion.of("off"),
+                VariationName.Companion.of("on")
             ),
-            defaultVariation = VariationName.of("off"),
+            defaultVariation = VariationName.Companion.of("off"),
             environments = mapOf(
-                EnvironmentName.of("dev") to ToggleEnvironmentDto(
+                EnvironmentName.Companion.of("dev") to ToggleEnvironmentDto(
                     variations = mapOf(
-                        VariationName.of("off") to Weight.of(0),
-                        VariationName.of("on") to Weight.of(1)
+                        VariationName.Companion.of("off") to Weight.Companion.of(0),
+                        VariationName.Companion.of("on") to Weight.Companion.of(1)
                     ),
                     overrides = emptyMap()
                 ),
-                EnvironmentName.of("prod") to ToggleEnvironmentDto(
+                EnvironmentName.Companion.of("prod") to ToggleEnvironmentDto(
                     variations = mapOf(
-                        VariationName.of("off") to Weight.of(2),
-                        VariationName.of("on") to Weight.of(1)
+                        VariationName.Companion.of("off") to Weight.Companion.of(2),
+                        VariationName.Companion.of("on") to Weight.Companion.of(1)
                     ),
                     overrides = mapOf(
-                        SubjectId.of("testuser") to VariationName.of("on")
+                        SubjectId.Companion.of("testuser") to VariationName.Companion.of("on")
                     )
                 )
             )

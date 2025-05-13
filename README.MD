@@ -14,12 +14,14 @@ Feature Flags Server and Kotlin Library
   - Postgres
 
 ## TODO
-- tenant mode
-  - tenants are billed individually
-  - can't remove last admin of tenant
 - user login (google, microsoft, github)
   - Users should be able to make tenants, and also be invited to others (ie users can have multiple tenants)
-- user roles (admin, operator, tester)
 - file storage
 - readme should include bucketing spec
 - readme should include required flyway drivers
+- docker image
+- readme to show how to build your own server with kotlin
+- web frontend
+  - kotlinx.html
+  - htmx: https://github.com/IodeSystems/kotlinx-htmx
+  - Daisy UI

@@ -71,6 +71,7 @@ class ApiKey private constructor(value: String): StringValue(value, Maskers.hidd
     companion object: ResourceIdValueFactory<ApiKey>(::ApiKey, 16)
 }
 
+// TODO split into userId and ToggleId
 class UniqueId private constructor(value: String): StringValue(value), ComparableValue<UniqueId, String> {
     companion object: Base64StringValueFactory<UniqueId>(
         fn = ::UniqueId,

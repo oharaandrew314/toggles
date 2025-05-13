@@ -31,6 +31,7 @@ const val IDP1 = "idp1.com"
 val idp1Email1 = EmailAddress.of("user1@$IDP1")
 val idp1Email2 = EmailAddress.of("user2@$IDP1")
 val idp1Email3 = EmailAddress.of("user3@$IDP1")
+val idp1Email4 = EmailAddress.of("user4@$IDP1")
 
 const val IDP2 = "idp2.com"
 val idp2Email1 = EmailAddress.of("user1@$IDP2")

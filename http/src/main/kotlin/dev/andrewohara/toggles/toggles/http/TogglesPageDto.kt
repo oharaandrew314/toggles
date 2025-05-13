@@ -1,6 +1,7 @@
-package dev.andrewohara.toggles.http
+package dev.andrewohara.toggles.toggles.http
 
 import dev.andrewohara.toggles.ToggleName
+import dev.andrewohara.toggles.http.togglesJson
 import se.ansman.kotshi.JsonSerializable
 
 @JsonSerializable
@@ -11,8 +12,8 @@ data class TogglesPageDto(
     companion object {
         val lens = togglesJson.autoBody<TogglesPageDto>().toLens()
         val sample = TogglesPageDto(
-            items = listOf(ToggleDto.sample),
-            next = ToggleName.of("my_toggle")
+            items = listOf(ToggleDto.Companion.sample),
+            next = ToggleName.Companion.of("my_toggle")
         )
     }
 }

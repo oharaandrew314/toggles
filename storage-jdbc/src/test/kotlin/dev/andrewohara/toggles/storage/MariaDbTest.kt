@@ -5,12 +5,14 @@ import dev.andrewohara.toggles.projects.ProjectStorageContract
 import dev.andrewohara.toggles.tenants.TenantStorageContract
 import dev.andrewohara.toggles.toggles.ToggleStorageContract
 import dev.andrewohara.toggles.users.UserStorageContract
+import org.junit.jupiter.api.Tag
 import org.testcontainers.containers.MariaDBContainer
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
 
 private fun mariaDb(): MariaDBContainer<*> = MariaDBContainer("mariadb:11.7.2")
 
+@Tag("slow")
 @Testcontainers
 class MariaDbToggleStorageTest: ProjectStorageContract() {
 
@@ -21,6 +23,7 @@ class MariaDbToggleStorageTest: ProjectStorageContract() {
     override fun createStorage() = mariaDb.toStorage()
 }
 
+@Tag("slow")
 @Testcontainers
 class MariaDbProjectStorageTest: ToggleStorageContract() {
 
@@ -31,6 +34,7 @@ class MariaDbProjectStorageTest: ToggleStorageContract() {
     override fun createStorage() = mariaDb.toStorage()
 }
 
+@Tag("slow")
 @Testcontainers
 class MariaDbApiKeyStorageTest: ApiKeysStorageContract() {
 
@@ -41,6 +45,7 @@ class MariaDbApiKeyStorageTest: ApiKeysStorageContract() {
     override fun createStorage() = mariaDb.toStorage()
 }
 
+@Tag("slow")
 @Testcontainers
 class MariaDbTenantStorageTest: TenantStorageContract() {
 
@@ -51,6 +56,7 @@ class MariaDbTenantStorageTest: TenantStorageContract() {
     override fun createStorage() = mariaDb.toStorage()
 }
 
+@Tag("slow")
 @Testcontainers
 class MariaDbUserStorageTest: UserStorageContract() {
 

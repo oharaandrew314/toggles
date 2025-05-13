@@ -9,6 +9,7 @@ import dev.andrewohara.toggles.Storage
 import dev.andrewohara.toggles.tenants.TenantStorageContract
 import dev.andrewohara.toggles.toggles.ToggleStorageContract
 import dev.andrewohara.toggles.toggles.TogglesHttpContract
+import dev.andrewohara.toggles.users.UsersHttpContract
 import dev.andrewohara.toggles.users.UserStorageContract
 import java.util.UUID
 
@@ -42,5 +43,9 @@ class H2TogglesHttpTest: TogglesHttpContract() {
 }
 
 class H2ProjectsHttpTest: ProjectsHttpContract() {
+    override fun createStorage() = create()
+}
+
+class H2UsersHttpTest: UsersHttpContract() {
     override fun createStorage() = create()
 }

@@ -85,17 +85,22 @@ internal fun jdbcUserStorage(dataSource: DataSource) = object: UserStorage {
         }
     }
 
-    override fun plusAssign(user: User) {
-        dataSource.connection.use { conn ->
-            conn.prepareStatement(INSERT).use { stmt ->
-                stmt.setString(1, user.tenantId.value)
-                stmt.setString(2, user.emailAddress.value)
-                stmt.setString(3, user.uniqueId.value)
-                stmt.setTimestamp(4, Timestamp.from(user.createdOn))
-                stmt.setString(5, user.role.toString())
+    override fun plusAssign(user: User) = dataSource.transaction {
+        prepareStatement(DELETE).use { stmt ->
+            stmt.setString(1, user.tenantId.value)
+            stmt.setString(2, user.uniqueId.value)
 
-                stmt.executeUpdate()
-            }
+            stmt.executeUpdate()
+        }
+
+        prepareStatement(INSERT).use { stmt ->
+            stmt.setString(1, user.tenantId.value)
+            stmt.setString(2, user.emailAddress.value)
+            stmt.setString(3, user.uniqueId.value)
+            stmt.setTimestamp(4, Timestamp.from(user.createdOn))
+            stmt.setString(5, user.role.toString())
+
+            stmt.executeUpdate()
         }
     }
 

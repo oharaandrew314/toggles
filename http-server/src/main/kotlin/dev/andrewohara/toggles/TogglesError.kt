@@ -14,5 +14,10 @@ data class ToggleNotFound(val projectName: ProjectName, val toggleName: ToggleNa
 
 data class ApiKeyNotFound(val projectName: ProjectName, val environmentName: EnvironmentName): TogglesError
 
-data class UserNotFound(val userId: UniqueId): TogglesError
+data class UserNotFound(val tenantId: TenantId, val userId: UniqueId): TogglesError
+data class UserNotFoundByEmail(val emailAddress: EmailAddress): TogglesError
 data class UserAlreadyExists(val tenantId: TenantId, val emailAddress: EmailAddress): TogglesError
+data object UserIsPrincipal: TogglesError
+
+data object RequiresAdmin: TogglesError
+data object RequiresAdminOrDeveloper: TogglesError

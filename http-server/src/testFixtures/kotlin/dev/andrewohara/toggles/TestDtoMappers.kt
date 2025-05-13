@@ -1,8 +1,8 @@
 package dev.andrewohara.toggles
 
-import dev.andrewohara.toggles.http.ToggleCreateDataDto
-import dev.andrewohara.toggles.http.ToggleEnvironmentDto
-import dev.andrewohara.toggles.http.ToggleUpdateDataDto
+import dev.andrewohara.toggles.toggles.http.ToggleCreateDataDto
+import dev.andrewohara.toggles.toggles.http.ToggleEnvironmentDto
+import dev.andrewohara.toggles.toggles.http.ToggleUpdateDataDto
 import dev.andrewohara.toggles.toggles.ToggleCreateData
 import dev.andrewohara.toggles.toggles.ToggleUpdateData
 

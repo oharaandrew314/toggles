@@ -1,8 +1,9 @@
-package dev.andrewohara.toggles.http
+package dev.andrewohara.toggles.toggles.http
 
 import dev.andrewohara.toggles.EnvironmentName
 import dev.andrewohara.toggles.ToggleName
 import dev.andrewohara.toggles.VariationName
+import dev.andrewohara.toggles.http.togglesJson
 import se.ansman.kotshi.JsonSerializable
 
 @JsonSerializable

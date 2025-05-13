@@ -1,6 +1,6 @@
 package dev.andrewohara.toggles
 
-import dev.andrewohara.toggles.users.UserAuthorizer
+import dev.andrewohara.toggles.users.http.UserAuthorizer
 import java.time.Clock
 import kotlin.random.Random
 

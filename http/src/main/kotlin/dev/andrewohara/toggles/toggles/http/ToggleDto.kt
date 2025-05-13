@@ -1,4 +1,4 @@
-package dev.andrewohara.toggles.http
+package dev.andrewohara.toggles.toggles.http
 
 import dev.andrewohara.toggles.EnvironmentName
 import dev.andrewohara.toggles.ProjectName
@@ -6,6 +6,7 @@ import dev.andrewohara.toggles.SubjectId
 import dev.andrewohara.toggles.ToggleName
 import dev.andrewohara.toggles.VariationName
 import dev.andrewohara.toggles.Weight
+import dev.andrewohara.toggles.http.togglesJson
 import org.http4k.contract.Tag
 import se.ansman.kotshi.JsonSerializable
 import java.time.Instant
@@ -22,9 +23,6 @@ data class ToggleDto(
 ) {
     companion object {
         val lens = togglesJson.autoBody<ToggleDto>().toLens()
-        val manyLens = togglesJson.autoBody<Array<ToggleDto>>().toLens()
-
-        val tag = Tag("Toggles")
 
         val sample = ToggleDto(
             projectName = ProjectName.of("my_project"),

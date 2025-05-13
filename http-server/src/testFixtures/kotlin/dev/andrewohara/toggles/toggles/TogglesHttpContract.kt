@@ -3,10 +3,6 @@ package dev.andrewohara.toggles.toggles
 import dev.andrewohara.toggles.ServerContractBase
 import dev.andrewohara.toggles.dev
 import dev.andrewohara.toggles.devAndProd
-import dev.andrewohara.toggles.http.TogglesErrorDto
-import dev.andrewohara.toggles.http.TogglesPageDto
-import dev.andrewohara.toggles.http.server.toDto
-import dev.andrewohara.toggles.idp1Email1
 import dev.andrewohara.toggles.mostlyNew
 import dev.andrewohara.toggles.mostlyOld
 import dev.andrewohara.toggles.oldNewData
@@ -16,41 +12,31 @@ import dev.andrewohara.toggles.projectName1
 import dev.andrewohara.toggles.projectName2
 import dev.andrewohara.toggles.projects.ProjectCreateData
 import dev.andrewohara.toggles.projects.createProject
-import dev.andrewohara.toggles.tenants.Tenant
-import dev.andrewohara.toggles.tenants.TenantCreateData
-import dev.andrewohara.toggles.tenants.createTenant
 import dev.andrewohara.toggles.toCreate
 import dev.andrewohara.toggles.toDto
 import dev.andrewohara.toggles.toggleName1
 import dev.andrewohara.toggles.toggleName2
 import dev.andrewohara.toggles.toggleName3
+import dev.andrewohara.toggles.http.TogglesErrorDto
+import dev.andrewohara.toggles.toggles.http.TogglesPageDto
+import dev.andrewohara.toggles.toggles.http.toDto
 import dev.andrewohara.utils.pagination.Page
+import dev.andrewohara.utils.pagination.map
 import dev.forkhandles.result4k.kotest.shouldBeFailure
 import dev.forkhandles.result4k.kotest.shouldBeSuccess
+import dev.forkhandles.result4k.map
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.Duration
 
 abstract class TogglesHttpContract: ServerContractBase() {
-
-    private lateinit var tenant1: Tenant
-    private lateinit var tenant1OwnerToken: String
-
-    @BeforeEach
-    override fun setup() {
-        super.setup()
-
-        tenant1 = toggles.createTenant(TenantCreateData(idp1Email1)).shouldBeSuccess()
-        tenant1OwnerToken = createToken(idp1Email1)
-    }
     
     @Test
     fun `create toggle - project not found`() {
-        httpClient(tenant1OwnerToken).createToggle(
+        httpClient(adminToken).createToggle(
             projectName = projectName1,
             data = oldNewData.toCreate(toggleName1).toDto()
         ) shouldBeFailure TogglesErrorDto(
@@ -60,10 +46,10 @@ abstract class TogglesHttpContract: ServerContractBase() {
     
     @Test
     fun `create toggle - already exists`() {
-        toggles.createProject(tenant1.tenantId, ProjectCreateData(projectName1, devAndProd)).shouldBeSuccess()
-        toggles.createToggle(tenant1.tenantId, projectName1, oldNewData.toCreate(toggleName1)).shouldBeSuccess()
+        toggles.createProject(admin, ProjectCreateData(projectName1, devAndProd)).shouldBeSuccess()
+        toggles.createToggle(admin, projectName1, oldNewData.toCreate(toggleName1)).shouldBeSuccess()
 
-        httpClient(tenant1OwnerToken).createToggle(
+        httpClient(adminToken).createToggle(
             projectName = projectName1,
             data = oldNewData.toCreate(toggleName1).toDto()
         ) shouldBeFailure TogglesErrorDto(
@@ -72,8 +58,8 @@ abstract class TogglesHttpContract: ServerContractBase() {
     }
     
     @Test
-    fun `create toggle - success`() {
-        toggles.createProject(tenant1.tenantId, ProjectCreateData(projectName1, devAndProd)).shouldBeSuccess()
+    fun `create toggle - success as admin`() {
+        toggles.createProject(admin, ProjectCreateData(projectName1, devAndProd)).shouldBeSuccess()
 
         val expected = Toggle(
             tenantId = tenant1.tenantId,
@@ -89,7 +75,7 @@ abstract class TogglesHttpContract: ServerContractBase() {
             )
         )
 
-        httpClient(tenant1OwnerToken).createToggle(
+        httpClient(adminToken).createToggle(
             projectName = projectName1,
             data = oldNewData.toCreate(toggleName1).toDto()
         ) shouldBeSuccess expected.toDto()
@@ -101,35 +87,64 @@ abstract class TogglesHttpContract: ServerContractBase() {
     }
 
     @Test
-    fun `create toggle - duplicate in other project`() {
-        toggles.createProject(tenant1.tenantId, ProjectCreateData(projectName1, devAndProd)).shouldBeSuccess()
-        toggles.createProject(tenant1.tenantId, ProjectCreateData(projectName2, devAndProd)).shouldBeSuccess()
-        val toggle1 = toggles.createToggle(tenant1.tenantId, projectName1, oldNewData.toCreate(toggleName1)).shouldBeSuccess()
+    fun `create toggle - success as developer`() {
+        toggles.createProject(admin, ProjectCreateData(projectName1, devAndProd)).shouldBeSuccess()
 
-        val toggle2 = httpClient(tenant1OwnerToken).createToggle(
+        val toggle = httpClient(developerToken).createToggle(
+            projectName = projectName1,
+            data = oldNewData.toCreate(toggleName1).toDto()
+        ).shouldBeSuccess()
+
+        toggles.listToggles(tenant1.tenantId, projectName1, null)
+            .map { it.map(Toggle::toDto) } shouldBeSuccess Page(
+            items = listOf(toggle),
+            next = null
+        )
+    }
+
+    @Test
+    fun `create toggle - forbidden as tester`() {
+        toggles.createProject(admin, ProjectCreateData(projectName1, devAndProd)).shouldBeSuccess()
+
+        httpClient(testerToken).createToggle(
+            projectName = projectName1,
+            data = oldNewData.toCreate(toggleName1).toDto()
+        ).shouldBeFailure(TogglesErrorDto("You must be an admin or developer to perform this action"))
+    }
+
+    @Test
+    fun `create toggle - duplicate in other project`() {
+        toggles.createProject(admin, ProjectCreateData(projectName1, devAndProd)).shouldBeSuccess()
+        toggles.createProject(admin, ProjectCreateData(projectName2, devAndProd)).shouldBeSuccess()
+        val toggle1 = toggles.createToggle(admin, projectName1, oldNewData.toCreate(toggleName1)).shouldBeSuccess()
+
+        val toggle2 = httpClient(adminToken).createToggle(
             projectName = projectName2,
             data = oldNewData.toCreate(toggleName1).toDto()
         ).shouldBeSuccess()
 
         toggles.listToggles(tenant1.tenantId, projectName1, null) shouldBeSuccess Page(listOf(toggle1), null)
-        httpClient(tenant1OwnerToken).listToggles(projectName2, null) shouldBeSuccess TogglesPageDto(listOf(toggle2), null)
+        httpClient(adminToken).listToggles(projectName2, null) shouldBeSuccess TogglesPageDto(
+            listOf(toggle2),
+            null
+        )
     }
     
     @Test
     fun `list toggles - success`() {
-        toggles.createProject(tenant1.tenantId, ProjectCreateData(projectName1, devAndProd)).shouldBeSuccess()
-        toggles.createProject(tenant1.tenantId, ProjectCreateData(projectName2, devAndProd)).shouldBeSuccess()
+        toggles.createProject(admin, ProjectCreateData(projectName1, devAndProd)).shouldBeSuccess()
+        toggles.createProject(admin, ProjectCreateData(projectName2, devAndProd)).shouldBeSuccess()
 
-        val toggle1 = toggles.createToggle(tenant1.tenantId, projectName1, oldNewData.toCreate(toggleName1)).shouldBeSuccess()
-        val toggle2 = toggles.createToggle(tenant1.tenantId, projectName1, oldNewData.toCreate(toggleName2)).shouldBeSuccess()
-        val toggle3 = toggles.createToggle(tenant1.tenantId, projectName1, oldNewData.toCreate(toggleName3)).shouldBeSuccess()
-        val toggle4 = toggles.createToggle(tenant1.tenantId, projectName2, oldNewData.toCreate(toggleName1)).shouldBeSuccess()
+        val toggle1 = toggles.createToggle(admin, projectName1, oldNewData.toCreate(toggleName1)).shouldBeSuccess()
+        val toggle2 = toggles.createToggle(admin, projectName1, oldNewData.toCreate(toggleName2)).shouldBeSuccess()
+        val toggle3 = toggles.createToggle(admin, projectName1, oldNewData.toCreate(toggleName3)).shouldBeSuccess()
+        val toggle4 = toggles.createToggle(admin, projectName2, oldNewData.toCreate(toggleName1)).shouldBeSuccess()
 
-        val page1 = httpClient(tenant1OwnerToken).listToggles(projectName1, null).shouldBeSuccess()
+        val page1 = httpClient(testerToken).listToggles(projectName1, null).shouldBeSuccess()
         page1.items.shouldHaveSize(2)
         page1.next.shouldNotBeNull()
 
-        val page2 = httpClient(tenant1OwnerToken).listToggles(projectName1, page1.next).shouldBeSuccess()
+        val page2 = httpClient(testerToken).listToggles(projectName1, page1.next).shouldBeSuccess()
         page2.items.shouldHaveSize(1)
         page2.next.shouldBeNull()
 
@@ -137,7 +152,7 @@ abstract class TogglesHttpContract: ServerContractBase() {
             toggle1.toDto(), toggle2.toDto(), toggle3.toDto()
         )
 
-        httpClient(tenant1OwnerToken).listToggles(projectName2, null) shouldBeSuccess TogglesPageDto(
+        httpClient(testerToken).listToggles(projectName2, null) shouldBeSuccess TogglesPageDto(
             items = listOf(toggle4.toDto()),
             next = null
         )
@@ -145,9 +160,9 @@ abstract class TogglesHttpContract: ServerContractBase() {
     
     @Test
     fun `update toggle - toggle not found`() {
-        toggles.createProject(tenant1.tenantId, ProjectCreateData(projectName1, devAndProd)).shouldBeSuccess()
+        toggles.createProject(admin, ProjectCreateData(projectName1, devAndProd)).shouldBeSuccess()
 
-        httpClient(tenant1OwnerToken).updateToggle(
+        httpClient(adminToken).updateToggle(
             projectName = projectName1,
             toggleName = toggleName1,
             data = oldNewData.toDto()
@@ -158,7 +173,7 @@ abstract class TogglesHttpContract: ServerContractBase() {
     
     @Test
     fun `update toggle - project not found`() {
-        httpClient(tenant1OwnerToken).updateToggle(
+        httpClient(adminToken).updateToggle(
             projectName = projectName1,
             toggleName = toggleName1,
             data = oldNewData.toDto()
@@ -169,8 +184,8 @@ abstract class TogglesHttpContract: ServerContractBase() {
     
     @Test
     fun `update toggle - success`() {
-        toggles.createProject(tenant1.tenantId, ProjectCreateData(projectName1, devAndProd)).shouldBeSuccess()
-        val original = toggles.createToggle(tenant1.tenantId, projectName1, oldNewData.toCreate(toggleName1)).shouldBeSuccess()
+        toggles.createProject(admin, ProjectCreateData(projectName1, devAndProd)).shouldBeSuccess()
+        val original = toggles.createToggle(admin, projectName1, oldNewData.toCreate(toggleName1)).shouldBeSuccess()
 
         time += Duration.ofSeconds(5)
 
@@ -181,7 +196,7 @@ abstract class TogglesHttpContract: ServerContractBase() {
             updatedOn = time
         )
 
-        httpClient(tenant1OwnerToken).updateToggle(
+        httpClient(testerToken).updateToggle(
             projectName = projectName1,
             toggleName = toggleName1,
             data = onOffData.toDto()
@@ -195,7 +210,7 @@ abstract class TogglesHttpContract: ServerContractBase() {
     
     @Test
     fun `get toggle - project not found`() {
-        httpClient(tenant1OwnerToken).getToggle(
+        httpClient(adminToken).getToggle(
             projectName = projectName1,
             toggleName = toggleName1
         ) shouldBeFailure TogglesErrorDto(
@@ -205,9 +220,9 @@ abstract class TogglesHttpContract: ServerContractBase() {
 
     @Test
     fun `get toggle - toggle not found`() {
-        toggles.createProject(tenant1.tenantId, ProjectCreateData(projectName1, devAndProd)).shouldBeSuccess()
+        toggles.createProject(admin, ProjectCreateData(projectName1, devAndProd)).shouldBeSuccess()
 
-        httpClient(tenant1OwnerToken).getToggle(
+        httpClient(adminToken).getToggle(
             projectName = projectName1,
             toggleName = toggleName1
         ) shouldBeFailure TogglesErrorDto(
@@ -217,11 +232,11 @@ abstract class TogglesHttpContract: ServerContractBase() {
 
     @Test
     fun `get toggle - success`() {
-        toggles.createProject(tenant1.tenantId, ProjectCreateData(projectName1, devAndProd)).shouldBeSuccess()
+        toggles.createProject(admin, ProjectCreateData(projectName1, devAndProd)).shouldBeSuccess()
 
-        val toggle = toggles.createToggle(tenant1.tenantId, projectName1, oldNewData.toCreate(toggleName1)).shouldBeSuccess()
+        val toggle = toggles.createToggle(admin, projectName1, oldNewData.toCreate(toggleName1)).shouldBeSuccess()
 
-        httpClient(tenant1OwnerToken).getToggle(
+        httpClient(testerToken).getToggle(
             projectName = projectName1,
             toggleName = toggleName1
         ) shouldBeSuccess toggle.toDto()
@@ -229,7 +244,7 @@ abstract class TogglesHttpContract: ServerContractBase() {
 
     @Test
     fun `delete toggle - project not found`() {
-        httpClient(tenant1OwnerToken).deleteToggle(
+        httpClient(adminToken).deleteToggle(
             projectName = projectName1,
             toggleName = toggleName1
         ) shouldBeFailure TogglesErrorDto(
@@ -239,9 +254,9 @@ abstract class TogglesHttpContract: ServerContractBase() {
 
     @Test
     fun `delete toggle - toggle not found`() {
-        toggles.createProject(tenant1.tenantId, ProjectCreateData(projectName1, devAndProd)).shouldBeSuccess()
+        toggles.createProject(admin, ProjectCreateData(projectName1, devAndProd)).shouldBeSuccess()
 
-        httpClient(tenant1OwnerToken).deleteToggle(
+        httpClient(adminToken).deleteToggle(
             projectName = projectName1,
             toggleName = toggleName1
         ) shouldBeFailure TogglesErrorDto(
@@ -250,11 +265,11 @@ abstract class TogglesHttpContract: ServerContractBase() {
     }
 
     @Test
-    fun `delete toggle - success`() {
-        toggles.createProject(tenant1.tenantId, ProjectCreateData(projectName1, devAndProd)).shouldBeSuccess()
-        val toggle = toggles.createToggle(tenant1.tenantId, projectName1, oldNewData.toCreate(toggleName1)).shouldBeSuccess()
+    fun `delete toggle - success as admin`() {
+        toggles.createProject(admin, ProjectCreateData(projectName1, devAndProd)).shouldBeSuccess()
+        val toggle = toggles.createToggle(admin, projectName1, oldNewData.toCreate(toggleName1)).shouldBeSuccess()
 
-        httpClient(tenant1OwnerToken).deleteToggle(
+        httpClient(adminToken).deleteToggle(
             projectName = projectName1,
             toggleName = toggleName1
         ) shouldBeSuccess toggle.toDto()
@@ -263,5 +278,27 @@ abstract class TogglesHttpContract: ServerContractBase() {
             items = emptyList(),
             next = null
         )
+    }
+
+    @Test
+    fun `delete toggle - success as developer`() {
+        toggles.createProject(admin, ProjectCreateData(projectName1, devAndProd)).shouldBeSuccess()
+        val toggle = toggles.createToggle(admin, projectName1, oldNewData.toCreate(toggleName1)).shouldBeSuccess()
+
+        httpClient(developerToken).deleteToggle(
+            projectName = projectName1,
+            toggleName = toggleName1
+        ) shouldBeSuccess toggle.toDto()
+    }
+
+    @Test
+    fun `delete toggle - forbidden as tester`() {
+        toggles.createProject(admin, ProjectCreateData(projectName1, devAndProd)).shouldBeSuccess()
+        val toggle = toggles.createToggle(admin, projectName1, oldNewData.toCreate(toggleName1)).shouldBeSuccess()
+
+        httpClient(testerToken).deleteToggle(
+            projectName = toggle.projectName,
+            toggleName = toggle.toggleName
+        ) shouldBeFailure TogglesErrorDto("You must be an admin or developer to perform this action")
     }
 }

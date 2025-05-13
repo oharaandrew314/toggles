@@ -8,6 +8,14 @@ data class TogglesErrorDto(
 ) {
     companion object {
         val lens = togglesJson.autoBody<TogglesErrorDto>().toLens()
+
+        val userNotFoundSample = TogglesErrorDto(
+            message = "user not found: abc123"
+        )
+        val userAlreadyExistsSample = TogglesErrorDto(
+            message = "user already exists: user@domain.com"
+        )
+
         val projectAlreadyExistsSample = TogglesErrorDto(
             message = "project already exists: my_project"
         )

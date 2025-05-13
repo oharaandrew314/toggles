@@ -90,4 +90,10 @@ abstract class UserStorageContract:  StorageContractBase() {
         storage.users -= user1
         storage.users -= user1
     }
+
+    @Test
+    fun `update user`() {
+        storage.users += user2.copy(role = UserRole.Admin)
+        storage.users[user2.tenantId, user2.uniqueId] shouldBe user2.copy(role = UserRole.Admin)
+    }
 }

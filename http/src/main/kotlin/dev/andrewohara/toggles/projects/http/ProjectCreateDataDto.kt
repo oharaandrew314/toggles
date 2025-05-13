@@ -1,7 +1,8 @@
-package dev.andrewohara.toggles.http
+package dev.andrewohara.toggles.projects.http
 
 import dev.andrewohara.toggles.EnvironmentName
 import dev.andrewohara.toggles.ProjectName
+import dev.andrewohara.toggles.http.togglesJson
 import se.ansman.kotshi.JsonSerializable
 
 @JsonSerializable
@@ -13,8 +14,8 @@ data class ProjectCreateDataDto(
         val lens = togglesJson.autoBody<ProjectCreateDataDto>().toLens()
 
         val sample = ProjectCreateDataDto(
-            projectName = ProjectName.of("my_project"),
-            environments = listOf(EnvironmentName.of("production"))
+            projectName = ProjectName.Companion.of("my_project"),
+            environments = listOf(EnvironmentName.Companion.of("production"))
         )
     }
 }

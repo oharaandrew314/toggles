@@ -32,7 +32,10 @@ fun inMemoryUserStorage() = object: UserStorage {
 
     override fun get(emailAddress: EmailAddress) = users.find { it.emailAddress == emailAddress }
 
-    override fun plusAssign(user: User) = users.plusAssign(user)
+    override fun plusAssign(user: User) {
+        users -= user
+        users += user
+    }
 
     override fun minusAssign(user: User) = users.minusAssign(user)
 }

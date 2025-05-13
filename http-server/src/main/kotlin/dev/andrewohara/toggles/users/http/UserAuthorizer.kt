@@ -1,4 +1,4 @@
-package dev.andrewohara.toggles.users
+package dev.andrewohara.toggles.users.http
 
 import com.nimbusds.jose.JWSAlgorithm
 import com.nimbusds.jose.jwk.source.JWKSource
@@ -9,6 +9,16 @@ import com.nimbusds.jwt.JWTClaimsSet
 import com.nimbusds.jwt.proc.DefaultJWTClaimsVerifier
 import com.nimbusds.jwt.proc.DefaultJWTProcessor
 import dev.andrewohara.toggles.EmailAddress
+import dev.andrewohara.toggles.RequiresAdmin
+import dev.andrewohara.toggles.RequiresAdminOrDeveloper
+import dev.andrewohara.toggles.TogglesError
+import dev.andrewohara.toggles.UserIsPrincipal
+import dev.andrewohara.toggles.users.User
+import dev.andrewohara.toggles.users.UserRole
+import dev.forkhandles.result4k.Result4k
+import dev.forkhandles.result4k.asFailure
+import dev.forkhandles.result4k.asSuccess
+import dev.forkhandles.result4k.flatMap
 import mu.KotlinLogging
 import java.net.URI
 import java.time.Clock
@@ -48,10 +58,21 @@ fun UserAuthorizer.Companion.jwt(
     }
 
     return UserAuthorizer { idToken ->
-        kotlin
-            .runCatching { processor.process(idToken, null) }
+        runCatching { processor.process(idToken, null) }
             .onFailure { logger.debug("Failed to process JWT: $it") }
             .map { EmailAddress.parse(it.getStringClaim("email")) }
             .getOrNull()
+    }
+}
+
+fun User.requireAdmin() = if (role == UserRole.Admin) asSuccess() else RequiresAdmin.asFailure()
+
+fun User.requireAdminOrDeveloper() = if (role == UserRole.Admin || role == UserRole.Developer) asSuccess() else RequiresAdminOrDeveloper.asFailure()
+
+fun Result4k<User, TogglesError>.cannotBePrincipal(principal: User) = flatMap {
+    if (principal.tenantId == it.tenantId && principal.uniqueId == it.uniqueId) {
+        UserIsPrincipal.asFailure()
+    } else {
+        it.asSuccess()
     }
 }

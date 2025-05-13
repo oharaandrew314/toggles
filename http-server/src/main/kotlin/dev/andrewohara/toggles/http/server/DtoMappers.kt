@@ -2,61 +2,23 @@ package dev.andrewohara.toggles.http.server
 
 import dev.andrewohara.toggles.ApiKeyNotFound
 import dev.andrewohara.toggles.EnvironmentInUse
-import dev.andrewohara.toggles.projects.Project
 import dev.andrewohara.toggles.ProjectAlreadyExists
-import dev.andrewohara.toggles.projects.ProjectCreateData
-import dev.andrewohara.toggles.ProjectName
 import dev.andrewohara.toggles.ProjectNotEmpty
 import dev.andrewohara.toggles.ProjectNotFound
+import dev.andrewohara.toggles.RequiresAdmin
+import dev.andrewohara.toggles.RequiresAdminOrDeveloper
 import dev.andrewohara.toggles.TenantNotFound
-import dev.andrewohara.toggles.projects.ProjectUpdateData
-import dev.andrewohara.toggles.toggles.Toggle
 import dev.andrewohara.toggles.ToggleAlreadyExists
-import dev.andrewohara.toggles.toggles.ToggleCreateData
-import dev.andrewohara.toggles.toggles.ToggleEnvironment
-import dev.andrewohara.toggles.ToggleName
 import dev.andrewohara.toggles.ToggleNotFound
-import dev.andrewohara.toggles.ToggleState
-import dev.andrewohara.toggles.toggles.ToggleUpdateData
 import dev.andrewohara.toggles.TogglesError
 import dev.andrewohara.toggles.UserAlreadyExists
+import dev.andrewohara.toggles.UserIsPrincipal
 import dev.andrewohara.toggles.UserNotFound
-import dev.andrewohara.toggles.http.ProjectCreateDataDto
-import dev.andrewohara.toggles.http.ProjectDto
-import dev.andrewohara.toggles.http.ProjectUpdateDataDto
-import dev.andrewohara.toggles.http.ProjectsPageDto
-import dev.andrewohara.toggles.http.ToggleCreateDataDto
-import dev.andrewohara.toggles.http.ToggleUpdateDataDto
-import dev.andrewohara.toggles.http.ToggleDto
-import dev.andrewohara.toggles.http.ToggleEnvironmentDto
-import dev.andrewohara.toggles.http.ToggleStateDto
+import dev.andrewohara.toggles.UserNotFoundByEmail
 import dev.andrewohara.toggles.http.TogglesErrorDto
-import dev.andrewohara.toggles.http.TogglesPageDto
-import dev.andrewohara.utils.pagination.Page
 import org.http4k.core.Response
 import org.http4k.core.Status
 import org.http4k.core.with
-
-fun Page<Project, ProjectName>.toDto() = ProjectsPageDto(
-    items = items.map { it.toDto() },
-    next = next
-)
-
-fun Project.toDto() = ProjectDto(
-    projectName = projectName,
-    environments = environments,
-    createdOn = createdOn,
-    updatedOn = updatedOn
-)
-
-fun ProjectCreateDataDto.toModel() = ProjectCreateData(
-    projectName = projectName,
-    environments = environments
-)
-
-fun ProjectUpdateDataDto.toModel() = ProjectUpdateData(
-    environments = environments
-)
 
 fun TogglesError.toDto() = TogglesErrorDto(
     message = when(this) {
@@ -69,7 +31,11 @@ fun TogglesError.toDto() = TogglesErrorDto(
         is ApiKeyNotFound -> "Api Key not found: $projectName/$environmentName"
         is TenantNotFound -> "Tenant not found: $tenantId"
         is UserNotFound -> "User not found: $userId"
-        is UserAlreadyExists -> "User already exists: $tenantId/$emailAddress"
+        is UserAlreadyExists -> "User already exists: $emailAddress"
+        is UserNotFoundByEmail -> "User not found: $emailAddress"
+        RequiresAdmin -> "You must be an admin to perform this action"
+        RequiresAdminOrDeveloper -> "You must be an admin or developer to perform this action"
+        UserIsPrincipal -> "You cannot perform this action on yourself"
     }
 )
 
@@ -77,48 +43,3 @@ fun TogglesError.toResponse() = Response(when(this) {
     is ToggleNotFound, is ProjectNotFound -> Status.NOT_FOUND
     else -> Status.CONFLICT
 }).with(TogglesErrorDto.lens of toDto())
-
-fun Toggle.toDto() = ToggleDto(
-    projectName = projectName,
-    toggleName = toggleName,
-    createdOn = createdOn,
-    updatedOn = updatedOn,
-    variations = variations,
-    defaultVariation = defaultVariation,
-    environments = environments.mapValues { (_, env) ->
-        ToggleEnvironmentDto(
-            variations = env.weights,
-            overrides = env.overrides
-        )
-    }
-)
-
-fun Page<Toggle, ToggleName>.toDto() = TogglesPageDto(
-    items = items.map { it.toDto() },
-    next = next
-)
-
-fun ToggleUpdateDataDto.toModel() = ToggleUpdateData(
-    variations = variations,
-    defaultVariation = defaultVariation,
-    environments = environments.mapValues { it.value.toModel() }
-)
-
-fun ToggleCreateDataDto.toModel() = ToggleCreateData(
-    toggleName = toggleName,
-    variations = variations,
-    defaultVariation = defaultVariation,
-    environments = environments.mapValues { it.value.toModel() }
-)
-
-fun ToggleState.toDto() = ToggleStateDto(
-    uniqueId = uniqueId,
-    variations = variations,
-    defaultVariation = defaultVariation,
-    overrides = overrides
-)
-
-private fun ToggleEnvironmentDto.toModel() = ToggleEnvironment(
-    weights = variations,
-    overrides = overrides
-)

@@ -1,9 +1,10 @@
-package dev.andrewohara.toggles.http
+package dev.andrewohara.toggles.engine
 
 import dev.andrewohara.toggles.SubjectId
 import dev.andrewohara.toggles.UniqueId
 import dev.andrewohara.toggles.VariationName
 import dev.andrewohara.toggles.Weight
+import dev.andrewohara.toggles.http.togglesJson
 import se.ansman.kotshi.JsonSerializable
 
 @JsonSerializable
@@ -16,14 +17,14 @@ data class ToggleStateDto(
     companion object {
         val lens = togglesJson.autoBody<ToggleStateDto>().toLens()
         val sample = ToggleStateDto(
-            uniqueId = UniqueId.of("abcdefgh"),
+            uniqueId = UniqueId.Companion.of("abcdefgh"),
             variations = mapOf(
-                VariationName.of("off") to Weight.of(1),
-                VariationName.of("on") to Weight.of(2),
+                VariationName.Companion.of("off") to Weight.Companion.of(1),
+                VariationName.Companion.of("on") to Weight.Companion.of(2),
             ),
-            defaultVariation = VariationName.of("off"),
+            defaultVariation = VariationName.Companion.of("off"),
             overrides = mapOf(
-                SubjectId.of("testuser") to VariationName.of("on")
+                SubjectId.Companion.of("testuser") to VariationName.Companion.of("on")
             )
         )
     }
