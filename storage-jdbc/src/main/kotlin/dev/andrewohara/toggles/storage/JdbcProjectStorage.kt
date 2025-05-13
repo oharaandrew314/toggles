@@ -8,8 +8,6 @@ import dev.andrewohara.toggles.projects.ProjectStorage
 import dev.andrewohara.utils.jdbc.toSequence
 import dev.andrewohara.utils.pagination.Page
 import dev.andrewohara.utils.pagination.Paginator
-import org.http4k.lens.BiDiMapping
-import org.http4k.lens.StringBiDiMappings
 import java.sql.ResultSet
 import java.sql.Timestamp
 import javax.sql.DataSource
@@ -81,7 +79,7 @@ internal fun jdbcProjectStorage(dataSource: DataSource) = object: ProjectStorage
                 stmt.setString(2, project.projectName.value)
                 stmt.setTimestamp(3, Timestamp.from(project.createdOn))
                 stmt.setTimestamp(4, Timestamp.from(project.updatedOn))
-                stmt.setString(5, environmentsMapping(project.environments))
+                stmt.setString(5, project.environments.toCsv())
 
                 stmt.executeUpdate()
             }
@@ -100,12 +98,10 @@ internal fun jdbcProjectStorage(dataSource: DataSource) = object: ProjectStorage
     }
 }
 
-private val environmentsMapping = StringBiDiMappings.csv(mapElement = BiDiMapping(EnvironmentName::of, EnvironmentName::show))
-
 private fun ResultSet.toProject() = Project(
     tenantId = TenantId.parse(getString("tenant_id")),
     projectName = ProjectName.parse(getString("project_name")),
     createdOn = getTimestamp("created_on").toInstant(),
     updatedOn = getTimestamp("updated_on").toInstant(),
-    environments = environmentsMapping(getString("environments"))
+    environments = getString("environments").parseCsv(EnvironmentName)
 )

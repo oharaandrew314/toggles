@@ -3,7 +3,9 @@ plugins {
 }
 
 dependencies {
-    api(project(":http-server"))
+    api(platform("org.http4k:http4k-bom:_"))
+
+    api(project(":service"))
     api("org.http4k:http4k-connect-amazon-dynamodb")
 
     ksp("se.ansman.kotshi:compiler:_")

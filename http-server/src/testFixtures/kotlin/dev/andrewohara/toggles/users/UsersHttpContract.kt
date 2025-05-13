@@ -2,15 +2,11 @@ package dev.andrewohara.toggles.users
 
 import dev.andrewohara.toggles.ServerContractBase
 import dev.andrewohara.toggles.UniqueId
-import dev.andrewohara.toggles.http.TogglesErrorDto
+import dev.andrewohara.toggles.TogglesErrorDto
 import dev.andrewohara.toggles.idp1Email4
 import dev.andrewohara.toggles.idp2Email1
 import dev.andrewohara.toggles.tenants.TenantCreateData
 import dev.andrewohara.toggles.tenants.createTenant
-import dev.andrewohara.toggles.users.http.UserInviteDataDto
-import dev.andrewohara.toggles.users.http.UserPermissionsDataDto
-import dev.andrewohara.toggles.users.http.UserRoleDto
-import dev.andrewohara.toggles.users.http.toDto
 import dev.forkhandles.result4k.kotest.shouldBeFailure
 import dev.forkhandles.result4k.kotest.shouldBeSuccess
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder

@@ -1,6 +1,6 @@
 package dev.andrewohara.toggles.engine
 
-import dev.andrewohara.toggles.toggles.http.ToggleRoutes.toggleNameLens
+import dev.andrewohara.toggles.toggles.ToggleRoutes.toggleNameLens
 import org.http4k.contract.div
 import org.http4k.contract.meta
 import org.http4k.core.Method

@@ -1,5 +1,5 @@
 dependencies {
-    api(project(":http-server"))
+    api(project(":service"))
     implementation("org.flywaydb:flyway-core:_")
 
     testImplementation("org.testcontainers:postgresql")

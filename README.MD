@@ -14,6 +14,7 @@ Feature Flags Server and Kotlin Library
   - Postgres
 
 ## TODO
+- websocket/sse engine
 - user login (google, microsoft, github)
   - Users should be able to make tenants, and also be invited to others (ie users can have multiple tenants)
 - file storage

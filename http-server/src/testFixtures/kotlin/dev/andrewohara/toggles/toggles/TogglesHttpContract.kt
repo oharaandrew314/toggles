@@ -17,9 +17,7 @@ import dev.andrewohara.toggles.toDto
 import dev.andrewohara.toggles.toggleName1
 import dev.andrewohara.toggles.toggleName2
 import dev.andrewohara.toggles.toggleName3
-import dev.andrewohara.toggles.http.TogglesErrorDto
-import dev.andrewohara.toggles.toggles.http.TogglesPageDto
-import dev.andrewohara.toggles.toggles.http.toDto
+import dev.andrewohara.toggles.TogglesErrorDto
 import dev.andrewohara.utils.pagination.Page
 import dev.andrewohara.utils.pagination.map
 import dev.forkhandles.result4k.kotest.shouldBeFailure

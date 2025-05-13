@@ -3,7 +3,7 @@ package dev.andrewohara.toggles.engine
 import dev.andrewohara.toggles.ToggleState
 import dev.andrewohara.toggles.TogglesApp
 import dev.andrewohara.toggles.apikeys.ApiKeyMeta
-import dev.andrewohara.toggles.http.server.toResponse
+import dev.andrewohara.toggles.toResponse
 import dev.andrewohara.toggles.toggles.getState
 import dev.forkhandles.result4k.map
 import dev.forkhandles.result4k.recover

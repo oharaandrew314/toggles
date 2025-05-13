@@ -4,7 +4,7 @@ import dev.andrewohara.toggles.SubjectId
 import dev.andrewohara.toggles.UniqueId
 import dev.andrewohara.toggles.VariationName
 import dev.andrewohara.toggles.Weight
-import dev.andrewohara.toggles.http.togglesJson
+import dev.andrewohara.toggles.togglesJson
 import se.ansman.kotshi.JsonSerializable
 
 @JsonSerializable

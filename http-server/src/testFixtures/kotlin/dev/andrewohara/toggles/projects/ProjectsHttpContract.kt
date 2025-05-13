@@ -4,14 +4,11 @@ import dev.andrewohara.toggles.ServerContractBase
 import dev.andrewohara.toggles.apikeys.generateApiKey
 import dev.andrewohara.toggles.dev
 import dev.andrewohara.toggles.devAndProd
-import dev.andrewohara.toggles.projects.http.ProjectCreateDataDto
-import dev.andrewohara.toggles.http.TogglesErrorDto
+import dev.andrewohara.toggles.TogglesErrorDto
 import dev.andrewohara.toggles.oldNewData
 import dev.andrewohara.toggles.projectName1
 import dev.andrewohara.toggles.projectName2
 import dev.andrewohara.toggles.projectName3
-import dev.andrewohara.toggles.projects.http.ProjectsPageDto
-import dev.andrewohara.toggles.projects.http.toDto
 import dev.andrewohara.toggles.toCreate
 import dev.andrewohara.toggles.toggleName1
 import dev.andrewohara.toggles.toggles.createToggle

@@ -9,15 +9,14 @@ import com.nimbusds.jose.jwk.source.ImmutableJWKSet
 import com.nimbusds.jwt.JWTClaimsSet
 import com.nimbusds.jwt.SignedJWT
 import dev.andrewohara.toggles.http.client.TogglesHttpClient
-import dev.andrewohara.toggles.http.server.toHttpServer
 import dev.andrewohara.toggles.tenants.Tenant
 import dev.andrewohara.toggles.tenants.TenantCreateData
 import dev.andrewohara.toggles.tenants.createTenant
 import dev.andrewohara.toggles.users.User
 import dev.andrewohara.toggles.users.UserRole
 import dev.andrewohara.toggles.users.getUser
-import dev.andrewohara.toggles.users.http.UserAuthorizer
-import dev.andrewohara.toggles.users.http.jwt
+import dev.andrewohara.toggles.users.UserAuthorizer
+import dev.andrewohara.toggles.users.jwt
 import dev.andrewohara.toggles.users.inviteUser
 import dev.forkhandles.result4k.kotest.shouldBeSuccess
 import org.http4k.core.HttpHandler
@@ -87,21 +86,20 @@ abstract class ServerContractBase(val pageSize: Int = 2): StorageContractBase() 
             random = random,
             pageSize = pageSize,
             clock = clock,
-            secretKey = random.nextBytes(16),
-            userAuthorizer = UserAuthorizer.jwt(
-                audience = listOf(AUDIENCE),
-                issuer = IDP1,
-                clock = clock,
-                // TODO override JWKS URI instead of source
-                jwkSource = ImmutableJWKSet(JWKSet(
-                    RSAKey.Builder(keyPair.public as RSAPublicKey)
-                        .algorithm(JWSAlgorithm.RS256)
-                        .build()
-                ))
-            )
+            secretKey = random.nextBytes(16)
         )
 
-        httpServer = toggles.toHttpServer()
+        httpServer = toggles.toHttpServer(UserAuthorizer.jwt(
+            audience = listOf(AUDIENCE),
+            issuer = IDP1,
+            clock = clock,
+            // TODO override JWKS URI instead of source
+            jwkSource = ImmutableJWKSet(JWKSet(
+                RSAKey.Builder(keyPair.public as RSAPublicKey)
+                    .algorithm(JWSAlgorithm.RS256)
+                    .build()
+            ))
+        ))
 
         tenant1 = toggles.createTenant(TenantCreateData(idp1Email1))
             .shouldBeSuccess()

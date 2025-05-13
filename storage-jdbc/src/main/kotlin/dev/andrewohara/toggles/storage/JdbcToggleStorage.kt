@@ -14,8 +14,6 @@ import dev.andrewohara.utils.jdbc.getStringOrNull
 import dev.andrewohara.utils.jdbc.toSequence
 import dev.andrewohara.utils.pagination.Page
 import dev.andrewohara.utils.pagination.Paginator
-import org.http4k.lens.BiDiMapping
-import org.http4k.lens.StringBiDiMappings
 import java.sql.ResultSet
 import java.sql.Timestamp
 import javax.sql.DataSource
@@ -125,7 +123,7 @@ internal fun jdbcToggleStorage(dataSource: DataSource) = object: ToggleStorage {
                 stmt.setString(3, toggle.toggleName.value)
                 stmt.setTimestamp(4, Timestamp.from(toggle.createdOn))
                 stmt.setTimestamp(5, Timestamp.from(toggle.updatedOn))
-                stmt.setString(6, variationsMapping(toggle.variations))
+                stmt.setString(6, toggle.variations.toCsv())
                 stmt.setString(7, toggle.defaultVariation.value)
 
                 stmt.executeUpdate()
@@ -137,8 +135,8 @@ internal fun jdbcToggleStorage(dataSource: DataSource) = object: ToggleStorage {
                     stmt.setString(2, toggle.projectName.value)
                     stmt.setString(3, toggle.toggleName.value)
                     stmt.setString(4, envName.value)
-                    stmt.setString(5, weightsMapping(env.weights))
-                    stmt.setString(6, overridesMapping(env.overrides))
+                    stmt.setString(5, env.weights.toKeyValuePairs())
+                    stmt.setString(6, env.overrides.toKeyValuePairs())
 
                     stmt.executeUpdate()
                 }
@@ -166,7 +164,7 @@ private fun ResultSet.toToggle(): Toggle {
         toggleName = ToggleName.parse(getString("toggle_name")),
         createdOn = getTimestamp("created_on").toInstant(),
         updatedOn = getTimestamp("updated_on").toInstant(),
-        variations = variationsMapping(getString("variations")),
+        variations = getString("variations").parseCsv(VariationName),
         defaultVariation = VariationName.parse(getString("default_variation")),
         environments = emptyMap()
     )
@@ -180,10 +178,10 @@ private fun ResultSet.toToggle(): Toggle {
             if (envName == null || envToggleName != toggle.toggleName.value) break
 
             this[envName] = ToggleEnvironment(
-                weights = weightsMapping(getString("weights")),
-                overrides = overridesMapping(getString("overrides")),
+                weights = getString("weights").parseKeyValuePairs(VariationName, Weight),
+                overrides = getString("overrides").parseKeyValuePairs(SubjectId, VariationName),
             )
-        } while(next())
+        } while (next())
     }
 
     // If we processed at least one environment, move back so the subsequent next() call will move to the next toggle
@@ -193,7 +191,3 @@ private fun ResultSet.toToggle(): Toggle {
 
     return toggle.copy(environments = environments)
 }
-
-private val variationsMapping = StringBiDiMappings.csv(mapElement = BiDiMapping(VariationName::of, VariationName::show))
-private val weightsMapping = keyValuePairsMapping(VariationName.Companion, Weight.Companion)
-private val overridesMapping = keyValuePairsMapping(SubjectId.Companion, VariationName.Companion)
