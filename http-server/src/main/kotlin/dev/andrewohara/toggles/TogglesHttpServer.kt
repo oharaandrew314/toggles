@@ -1,12 +1,12 @@
 package dev.andrewohara.toggles
 
+import dev.andrewohara.auth.UserAuthorizer
 import dev.andrewohara.toggles.apikeys.ApiKeyMeta
 import dev.andrewohara.toggles.apikeys.hash
 import dev.andrewohara.toggles.engine.engineApiV1
 import dev.andrewohara.toggles.projects.projectApiV1
 import dev.andrewohara.toggles.toggles.toggleApiV1
 import dev.andrewohara.toggles.users.User
-import dev.andrewohara.toggles.users.UserAuthorizer
 import dev.andrewohara.toggles.users.userApiV1
 import dev.forkhandles.values.parseOrNull
 import org.http4k.contract.contract
@@ -30,7 +30,7 @@ fun TogglesApp.toHttpServer(userAuthorizer: UserAuthorizer): HttpHandler {
 
     val userAuthLens = RequestKey.required<User>("user_auth")
     val userSecurity = BearerAuthSecurity(userAuthLens, lookup = { idToken ->
-        userAuthorizer(idToken)?.let(storage.users::get)
+        userAuthorizer(idToken)?.let { storage.users[it.emailAddress] }
     })
 
     val service = this

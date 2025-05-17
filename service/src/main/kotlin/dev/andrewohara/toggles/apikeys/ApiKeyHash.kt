@@ -11,4 +11,5 @@ class ApiKeyHash private constructor(value: String): StringValue(value) {
         parseFn = String::uppercase,
         showFn = String::lowercase
     )
+    val base64 = value
 }

@@ -21,8 +21,13 @@ Feature Flags Server and Kotlin Library
 - readme should include bucketing spec
 - readme should include required flyway drivers
 - docker image
+- lambda template
 - readme to show how to build your own server with kotlin
 - web frontend
   - kotlinx.html
   - htmx: https://github.com/IodeSystems/kotlinx-htmx
   - Daisy UI
+- key management:
+  - Sessions: Use KMS asymmetric encryption (with local secret AES fallback)
+  - UniqueIds: don't need to be hashed with secret; tenantId will do
+  - API Keys: Use KMS asymmetric sign/verify (with local secret HMAC fallback)

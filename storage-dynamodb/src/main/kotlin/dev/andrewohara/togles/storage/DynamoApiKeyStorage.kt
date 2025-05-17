@@ -50,7 +50,7 @@ fun dynamoApiKeyStorage(
         projectRef = projectRefMapping(ProjectRef(meta.tenantId, meta.projectName)),
         environmentName = meta.environment,
         createdOn = meta.createdOn,
-        hash = apiKeyHash.toString()
+        hashBase64 = apiKeyHash.base64
     ))
 
     override fun minusAssign(meta: ApiKeyMeta) =
@@ -69,12 +69,12 @@ data class DynamoApiKey(
     val projectRef: String,
     val environmentName: EnvironmentName,
     val createdOn: Instant,
-    val hash: String
+    val hashBase64: String
 ) {
     companion object {
         val lookupIndex = DynamoDbTableMapperSchema.GlobalSecondary<DynamoApiKey, String, Unit>(
             indexName = IndexName.of("lookup"),
-            hashKeyAttribute = Attribute.string().required("hash"),
+            hashKeyAttribute = Attribute.string().required("hashBase64"),
             sortKeyAttribute = null,
             lens = dynamoJson.autoDynamoLens()
         )

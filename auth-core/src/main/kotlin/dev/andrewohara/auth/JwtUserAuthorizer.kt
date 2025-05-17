@@ -1,4 +1,4 @@
-package dev.andrewohara.toggles.users
+package dev.andrewohara.auth
 
 import com.nimbusds.jose.JWSAlgorithm
 import com.nimbusds.jose.jwk.source.JWKSource
@@ -14,25 +14,14 @@ import java.net.URI
 import java.time.Clock
 import java.util.Date
 
-private val googleJwkUri = URI.create("https://www.googleapis.com/oauth2/v3/certs").toURL()
-private const val googleIss = "accounts.google.com"
-
-fun interface UserAuthorizer {
-    operator fun invoke(idToken: String): EmailAddress?
-
-    companion object
-}
-
 fun UserAuthorizer.Companion.jwt(
     audience: List<String>,
     clock: Clock,
-    issuer: String = googleIss, // TODO support multiple issuers
+    issuer: String,
     algorithm: JWSAlgorithm = JWSAlgorithm.RS256,
-    jwkSource: JWKSource<SecurityContext> = JWKSourceBuilder
-        .create<SecurityContext>(googleJwkUri)
-        .build()
+    jwkSource: JWKSource<SecurityContext> // TODO replace with faked JWKS
 ): UserAuthorizer {
-    val logger = KotlinLogging.logger { }
+    val logger = KotlinLogging.logger { } // TODO maybe move the logging to a higher level
 
     val processor = DefaultJWTProcessor<SecurityContext>().apply {
         jwtClaimsSetVerifier = object: DefaultJWTClaimsVerifier<SecurityContext>(
@@ -50,7 +39,23 @@ fun UserAuthorizer.Companion.jwt(
     return UserAuthorizer { idToken ->
         runCatching { processor.process(idToken, null) }
             .onFailure { logger.debug("Failed to process JWT: $it") }
-            .map { EmailAddress.parse(it.getStringClaim("email")) }
+            .map { claims ->
+                UserPrincipal(
+                    name = claims.getStringClaim("name") ?: claims.getStringClaim("email"), // TODO gracefully handle null
+                    emailAddress = EmailAddress.parse(claims.getStringClaim("email")), // TODO gracefully handle null
+                    photoUrl = claims.getStringClaim("picture"),
+                    expires = claims.expirationTime.toInstant()
+                )
+            }
             .getOrNull()
     }
 }
+
+fun UserAuthorizer.Companion.google(clientId: String, clock: Clock) = jwt(
+    audience = listOf(clientId),
+    clock = clock,
+    issuer = "https://accounts.google.com",
+    jwkSource = JWKSourceBuilder
+        .create<SecurityContext>(URI.create("https://www.googleapis.com/oauth2/v3/certs").toURL())
+        .build()
+)

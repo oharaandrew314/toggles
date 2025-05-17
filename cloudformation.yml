@@ -1,0 +1,89 @@
+Resources:
+  Tenants:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: tenantId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: tenantId
+          KeyType: HASH
+
+  Users:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: tenantId
+          AttributeType: S
+        - AttributeName: uniqueId
+          AttributeType: S
+        - AttributeName: emailAddress
+          AttributeType: S
+      KeySchema:
+        - AttributeName: tenantId
+          KeyType: HASH
+        - AttributeName: uniqueId
+          KeyType: RANGE
+      GlobalSecondaryIndexes:
+        - IndexName: email
+          KeySchema:
+            - AttributeName: emailAddress
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+
+  Projects:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: tenantId
+          AttributeType: S
+        - AttributeName: projectName
+          AttributeType: S
+      KeySchema:
+        - AttributeName: tenantId
+          KeyType: HASH
+        - AttributeName: projectName
+          KeyType: RANGE
+
+  Toggles:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: projectRef
+          AttributeType: S
+        - AttributeName: toggleName
+          AttributeType: S
+      KeySchema:
+        - AttributeName: projectRef
+          KeyType: HASH
+        - AttributeName: toggleName
+          KeyType: RANGE
+
+  ApiKeys:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: projectRef
+          AttributeType: S
+        - AttributeName: environmentName
+          AttributeType: S
+        - AttributeName: hashBase64
+          AttributeType: S
+      KeySchema:
+        - AttributeName: projectRef
+          KeyType: HASH
+        - AttributeName: environmentName
+          KeyType: RANGE
+      GlobalSecondaryIndexes:
+        - IndexName: lookup
+          KeySchema:
+            - AttributeName: hashBase64
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL

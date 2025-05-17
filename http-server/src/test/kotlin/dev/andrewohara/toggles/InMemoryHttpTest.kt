@@ -1,6 +1,8 @@
 package dev.andrewohara.toggles
 
 import dev.andrewohara.toggles.projects.ProjectsHttpContract
+import dev.andrewohara.toggles.tenants.Tenant
+import dev.andrewohara.toggles.tenants.TenantsHttpContract
 import dev.andrewohara.toggles.toggles.TogglesHttpContract
 import dev.andrewohara.toggles.users.UsersHttpContract
 
@@ -13,5 +15,9 @@ class InMemoryTogglesHttpTest: TogglesHttpContract() {
 }
 
 class InMemoryUsersHttpTest: UsersHttpContract() {
+    override fun createStorage() = Storage.inMemory()
+}
+
+class InMemoryTenantsHttpTest: TenantsHttpContract() {
     override fun createStorage() = Storage.inMemory()
 }

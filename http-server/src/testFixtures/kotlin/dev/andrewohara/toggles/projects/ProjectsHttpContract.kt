@@ -5,6 +5,7 @@ import dev.andrewohara.toggles.apikeys.generateApiKey
 import dev.andrewohara.toggles.dev
 import dev.andrewohara.toggles.devAndProd
 import dev.andrewohara.toggles.TogglesErrorDto
+import dev.andrewohara.toggles.idp2Email1
 import dev.andrewohara.toggles.oldNewData
 import dev.andrewohara.toggles.projectName1
 import dev.andrewohara.toggles.projectName2
@@ -80,6 +81,15 @@ abstract class ProjectsHttpContract: ServerContractBase() {
 
         page1.items.plus(page2.items).shouldContainExactlyInAnyOrder(
             project1.toDto(), project2.toDto(), project3.toDto()
+        )
+    }
+
+    @Test
+    fun `list projects - logged in but not registered`() {
+        val token = createToken(idp2Email1)
+
+        httpClient(token).listProjects(null) shouldBeFailure TogglesErrorDto(
+            message = "You do not belong to a tenant"
         )
     }
 

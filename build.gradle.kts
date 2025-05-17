@@ -9,9 +9,7 @@ allprojects {
     repositories {
         mavenCentral()
     }
-}
 
-subprojects {
     apply(plugin = "kotlin")
     apply(plugin = "java-test-fixtures")
 
@@ -43,4 +41,12 @@ subprojects {
             allWarningsAsErrors = true
         }
     }
+}
+
+dependencies {
+    implementation(project(":http-server"))
+    implementation(project(":http-web"))
+    implementation(project(":storage-dynamodb"))
+
+    implementation("org.http4k:http4k-connect-amazon-sts")
 }

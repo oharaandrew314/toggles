@@ -49,3 +49,7 @@ class H2ProjectsHttpTest: ProjectsHttpContract() {
 class H2UsersHttpTest: UsersHttpContract() {
     override fun createStorage() = create()
 }
+
+class H2TenantsHttpTest: TenantStorageContract() {
+    override fun createStorage() = create()
+}

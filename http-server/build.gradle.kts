@@ -1,7 +1,7 @@
 dependencies {
     api(project(":http"))
     api(project(":service"))
-    api("com.nimbusds:nimbus-jose-jwt:_")
+    api(project(":auth-core"))
 
     testFixturesApi(project(":http-client"))
     testFixturesApi(testFixtures(project(":service")))

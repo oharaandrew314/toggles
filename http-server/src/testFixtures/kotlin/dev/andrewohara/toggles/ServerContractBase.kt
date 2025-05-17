@@ -8,6 +8,8 @@ import com.nimbusds.jose.jwk.RSAKey
 import com.nimbusds.jose.jwk.source.ImmutableJWKSet
 import com.nimbusds.jwt.JWTClaimsSet
 import com.nimbusds.jwt.SignedJWT
+import dev.andrewohara.auth.UserAuthorizer
+import dev.andrewohara.auth.jwt
 import dev.andrewohara.toggles.http.client.TogglesHttpClient
 import dev.andrewohara.toggles.tenants.Tenant
 import dev.andrewohara.toggles.tenants.TenantCreateData
@@ -15,8 +17,6 @@ import dev.andrewohara.toggles.tenants.createTenant
 import dev.andrewohara.toggles.users.User
 import dev.andrewohara.toggles.users.UserRole
 import dev.andrewohara.toggles.users.getUser
-import dev.andrewohara.toggles.users.UserAuthorizer
-import dev.andrewohara.toggles.users.jwt
 import dev.andrewohara.toggles.users.inviteUser
 import dev.forkhandles.result4k.kotest.shouldBeSuccess
 import org.http4k.core.HttpHandler
